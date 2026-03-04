@@ -22,18 +22,19 @@ const paginate = (total, data, page, limit) => ({
 // GET all users (protected, paginated)
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 20));
     const offset = (page - 1) * limit;
 
     const [[{ total }]] = await pool.execute('SELECT COUNT(*) AS total FROM users');
-    const [rows] = await pool.execute(
+    const [rows] = await pool.query(
       'SELECT id, email, name, role, phone, created_at AS createdAt FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?',
       [limit, offset]
     );
 
     res.json(paginate(total, rows, page, limit));
   } catch (error) {
+    console.error('Failed to fetch users:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
@@ -41,20 +42,21 @@ router.get('/', authenticateToken, async (req, res) => {
 // GET agents only (protected, paginated)
 router.get('/agents', authenticateToken, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 20));
     const offset = (page - 1) * limit;
 
     const [[{ total }]] = await pool.execute(
       "SELECT COUNT(*) AS total FROM users WHERE role = 'agent'"
     );
-    const [rows] = await pool.execute(
+    const [rows] = await pool.query(
       "SELECT id, email, name, role, phone, created_at AS createdAt FROM users WHERE role = 'agent' ORDER BY name ASC LIMIT ? OFFSET ?",
       [limit, offset]
     );
 
     res.json(paginate(total, rows, page, limit));
   } catch (error) {
+    console.error('Failed to fetch agents:', error);
     res.status(500).json({ error: 'Failed to fetch agents' });
   }
 });

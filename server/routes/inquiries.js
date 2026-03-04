@@ -51,18 +51,19 @@ router.get('/agents/workload', authenticateToken, async (req, res) => {
 // GET all inquiries (protected, paginated)
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 20));
     const offset = (page - 1) * limit;
 
     const [[{ total }]] = await pool.execute('SELECT COUNT(*) AS total FROM inquiries');
-    const [rows] = await pool.execute(
+    const [rows] = await pool.query(
       'SELECT * FROM inquiries ORDER BY created_at DESC LIMIT ? OFFSET ?',
       [limit, offset]
     );
 
     res.json(paginate(total, rows, page, limit));
   } catch (error) {
+    console.error('Failed to fetch inquiries:', error);
     res.status(500).json({ error: 'Failed to fetch inquiries' });
   }
 });

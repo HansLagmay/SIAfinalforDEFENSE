@@ -18,7 +18,15 @@ const SessionSwitcher: React.FC<SessionSwitcherProps> = ({ role, currentUser, on
 
   const loadSessions = () => {
     const allSessions = getSessionsForRole(role);
-    setSessions(allSessions);
+    // Deduplicate sessions by email to avoid showing duplicates
+    const uniqueSessions = allSessions.reduce((acc, session) => {
+      const existingIndex = acc.findIndex(s => s.user.email === session.user.email);
+      if (existingIndex === -1) {
+        acc.push(session);
+      }
+      return acc;
+    }, [] as Array<{ user: User; token: string }>);
+    setSessions(uniqueSessions);
   };
 
   const handleSwitch = (userId: string) => {

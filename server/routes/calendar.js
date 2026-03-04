@@ -16,8 +16,8 @@ const paginate = (total, data, page, limit) => ({
 // GET all calendar events (protected, paginated)
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 20));
     const offset = (page - 1) * limit;
     const shared = req.query.shared === 'true';
 
@@ -34,10 +34,11 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 
     const [[{ total }]] = await pool.execute(countSql, countParams);
-    const [rows] = await pool.execute(dataSql, dataParams);
+    const [rows] = await pool.query(dataSql, dataParams);
 
     res.json(paginate(total, rows, page, limit));
   } catch (error) {
+    console.error('Failed to fetch calendar events:', error);
     res.status(500).json({ error: 'Failed to fetch calendar events' });
   }
 });

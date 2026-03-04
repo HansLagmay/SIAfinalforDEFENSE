@@ -42,12 +42,12 @@ const attachImages = async (properties) => {
 // GET all properties (public, paginated)
 router.get('/', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 20));
     const offset = (page - 1) * limit;
 
     const [[{ total }]] = await pool.execute('SELECT COUNT(*) AS total FROM properties');
-    const [rows] = await pool.execute(
+    const [rows] = await pool.query(
       'SELECT * FROM properties ORDER BY created_at DESC LIMIT ? OFFSET ?',
       [limit, offset]
     );
@@ -55,6 +55,7 @@ router.get('/', async (req, res) => {
     const data = await attachImages(rows);
     res.json(paginate(total, data, page, limit));
   } catch (error) {
+    console.error('Properties fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch properties' });
   }
 });

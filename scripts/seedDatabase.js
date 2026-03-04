@@ -52,11 +52,16 @@ async function seed() {
         bedrooms: 3,
         bathrooms: 2,
         area: 120,
-        description: 'Beautiful modern house in a quiet subdivision with covered parking and garden.',
+        description: 'Beautiful modern house in a quiet subdivision with covered parking and garden. Features include spacious living areas, modern kitchen, and landscaped garden perfect for family gatherings.',
         status: 'available',
-        imageUrl: '/uploads/properties/sample1.jpg',
-        features: ['Parking', 'Garden', 'CCTV', 'Air Conditioning'],
-        images: ['/uploads/properties/sample1.jpg', '/uploads/properties/sample1b.jpg']
+        imageUrl: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop',
+        features: ['Parking', 'Garden', 'CCTV', 'Air Conditioning', 'Modern Kitchen', 'Spacious Living Room'],
+        images: [
+          'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=800&h=600&fit=crop'
+        ]
       },
       {
         title: 'Cozy 2BR Condo in BGC',
@@ -66,11 +71,15 @@ async function seed() {
         bedrooms: 2,
         bathrooms: 1,
         area: 65,
-        description: 'Modern condo unit on the 12th floor with stunning city views.',
+        description: 'Modern condo unit on the 12th floor with stunning city views. Fully furnished with contemporary amenities and access to building facilities including pool and gym.',
         status: 'available',
-        imageUrl: '/uploads/properties/sample2.jpg',
-        features: ['Pool', 'Gym', 'Security', 'City View'],
-        images: ['/uploads/properties/sample2.jpg']
+        imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop',
+        features: ['Pool', 'Gym', '24/7 Security', 'City View', 'Furnished', 'Balcony'],
+        images: [
+          'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop'
+        ]
       },
       {
         title: 'Commercial Space in Makati',
@@ -80,11 +89,16 @@ async function seed() {
         bedrooms: 0,
         bathrooms: 2,
         area: 200,
-        description: 'Prime commercial space suitable for office or retail use.',
+        description: 'Prime commercial space suitable for office or retail use. Located in the heart of Makati CBD with excellent accessibility and high foot traffic.',
         status: 'available',
-        imageUrl: '/uploads/properties/sample3.jpg',
-        features: ['24/7 Access', 'CCTV', 'Loading Bay'],
-        images: ['/uploads/properties/sample3.jpg', '/uploads/properties/sample3b.jpg']
+        imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=600&fit=crop',
+        features: ['24/7 Access', 'CCTV', 'Loading Bay', 'Elevator', 'Parking Slots', 'High Ceiling'],
+        images: [
+          'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800&h=600&fit=crop'
+        ]
       },
       {
         title: 'Beachfront Lot in Batangas',
@@ -94,11 +108,34 @@ async function seed() {
         bedrooms: 0,
         bathrooms: 0,
         area: 500,
-        description: 'Titled beachfront lot perfect for vacation house development.',
+        description: 'Titled beachfront lot perfect for vacation house development. Peaceful location with white sand beach access and stunning sunset views.',
         status: 'reserved',
-        imageUrl: '/uploads/properties/sample4.jpg',
-        features: ['Beachfront', 'Titled', 'Road Access'],
-        images: ['/uploads/properties/sample4.jpg']
+        imageUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&h=600&fit=crop',
+        features: ['Beachfront', 'Titled', 'Road Access', 'Electricity', 'Water Supply'],
+        images: [
+          'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=600&fit=crop'
+        ]
+      },
+      {
+        title: 'Luxury 4BR House in Alabang',
+        type: 'House',
+        price: 8500000,
+        location: 'Alabang, Muntinlupa City',
+        bedrooms: 4,
+        bathrooms: 3,
+        area: 250,
+        description: 'Luxurious house in exclusive Alabang subdivision. Features include swimming pool, landscaped gardens, and modern smart home technology.',
+        status: 'available',
+        imageUrl: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&h=600&fit=crop',
+        features: ['Swimming Pool', 'Smart Home', 'Garden', 'Parking for 3 Cars', 'Master Suite', 'Entertainment Room'],
+        images: [
+          'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800&h=600&fit=crop'
+        ]
       }
     ];
 
