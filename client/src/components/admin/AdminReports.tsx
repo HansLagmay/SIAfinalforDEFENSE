@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { inquiriesAPI, propertiesAPI, usersAPI } from '../../services/api';
-import type { Inquiry, Property, User } from '../../types';
+import { usersAPI } from '../../services/api';
 
 interface AgentMetrics {
   agentId: string;
@@ -11,6 +10,8 @@ interface AgentMetrics {
   conversionRate: number;
   propertiesSold: number;
   totalSalesValue: number;
+  averageRating: number;
+  feedbackCount: number;
 }
 
 const AdminReports = () => {
@@ -24,50 +25,24 @@ const AdminReports = () => {
   const loadAgentMetrics = async () => {
     setLoading(true);
     try {
-      const [usersRes, inquiriesRes, propertiesRes] = await Promise.all([
-        usersAPI.getAll(),
-        inquiriesAPI.getAll(),
-        propertiesAPI.getAll()
-      ]);
-      
-      const agents = (usersRes.data || []).filter((u: User) => u.role === 'agent');
-      const inquiries = inquiriesRes.data || [];
-      const properties = propertiesRes.data || [];
-      
-      const metrics = agents.map((agent: User) => {
-        // Only count inquiries from last 6 months for accurate conversion rate
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-        
-        const agentInquiries = inquiries.filter((i: Inquiry) => 
-          i.assignedTo === agent.id && 
-          new Date(i.createdAt) >= sixMonthsAgo
-        );
-        
-        const totalInquiries = agentInquiries.length;
-        const activeInquiries = agentInquiries.filter((i: Inquiry) => 
-          i.status !== 'deal-successful' && i.status !== 'deal-cancelled' && i.status !== 'no-response'
-        ).length;
-        const successfulInquiries = agentInquiries.filter((i: Inquiry) => i.status === 'deal-successful').length;
-        
-        // Calculate conversion rate based on closed inquiries (successful + cancelled + no-response)
-        const closedInquiries = agentInquiries.filter((i: Inquiry) => 
-          i.status === 'deal-successful' || i.status === 'deal-cancelled' || i.status === 'no-response'
-        ).length;
-        const conversionRate = closedInquiries > 0 ? (successfulInquiries / closedInquiries) * 100 : 0;
-        
-        const soldProperties = properties.filter((p: Property) => p.soldByAgentId === agent.id);
-        const totalSalesValue = soldProperties.reduce((sum: number, p: Property) => sum + (p.salePrice || p.price), 0);
-        
+      const performanceRes = await usersAPI.getAgentPerformance();
+      const rows = performanceRes.data?.data || [];
+
+      const metrics = rows.map((row: any) => {
+        const soldProperties = Array.isArray(row.soldProperties) ? row.soldProperties : [];
+        const totalSalesValue = soldProperties.reduce((sum: number, p: any) => sum + Number(p.sale_price || 0), 0);
+
         return {
-          agentId: agent.id,
-          agentName: agent.name,
-          totalInquiries,
-          activeInquiries,
-          successfulInquiries,
-          conversionRate,
+          agentId: row.agentId,
+          agentName: row.agentName,
+          totalInquiries: Number(row.totalInquiries || 0),
+          activeInquiries: Math.max(0, Number(row.totalInquiries || 0) - Number(row.closedInquiries || 0)),
+          successfulInquiries: Number(row.successfulInquiries || 0),
+          conversionRate: Number(row.conversionRate || 0),
           propertiesSold: soldProperties.length,
-          totalSalesValue
+          totalSalesValue,
+          averageRating: Number(row.averageRating || 0),
+          feedbackCount: Number(row.feedbackCount || 0)
         };
       });
       
@@ -127,6 +102,9 @@ const AdminReports = () => {
                   Conversion Rate
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Avg Rating
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Properties Sold
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -157,6 +135,9 @@ const AdminReports = () => {
                     }`}>
                       {metric.conversionRate.toFixed(1)}%
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {metric.feedbackCount > 0 ? `${metric.averageRating.toFixed(2)} / 5 (${metric.feedbackCount})` : 'No ratings'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {metric.propertiesSold}

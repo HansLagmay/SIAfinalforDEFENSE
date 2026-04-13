@@ -4,17 +4,19 @@ const bcrypt = require('bcryptjs');
 const pool = require('../db');
 const { generateToken } = require('../middleware/auth');
 const { loginLimiter } = require('../middleware/rateLimiter');
+const { sanitizeBody } = require('../middleware/sanitize');
 const logActivity = require('../middleware/logger');
 
-router.post('/', loginLimiter, async (req, res) => {
+router.post('/', loginLimiter, sanitizeBody, async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = (req.body.email || '').trim().toLowerCase();
+    const password = req.body.password;
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    const [rows] = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
+    const [rows] = await pool.execute('SELECT * FROM users WHERE email = ? AND archived_at IS NULL', [email]);
     const user = rows[0];
 
     if (!user) {

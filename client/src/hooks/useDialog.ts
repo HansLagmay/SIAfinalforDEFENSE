@@ -5,7 +5,7 @@ export interface ConfirmConfig {
   message: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'danger' | 'warning' | 'info';
+  variant?: 'danger' | 'warning' | 'info' | 'primary';
 }
 
 export interface PromptConfig {

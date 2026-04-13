@@ -24,6 +24,11 @@ const AppointmentModal = ({ property, onClose }: AppointmentModalProps) => {
     setError('');
     setSubmitting(true);
     try {
+      if (!confirm(`Submit viewing request for "${property.title}" on ${formData.preferredDate} at ${formData.preferredTime}?`)) {
+        setSubmitting(false);
+        return;
+      }
+
       const message = `Viewing request for ${property.title} on ${formData.preferredDate} at ${formData.preferredTime}. ` +
         `Contact: ${formData.email} / ${formData.phone}. ` +
         `${formData.notes ? `Notes: ${formData.notes}` : ''}`.trim();
@@ -80,11 +85,10 @@ const AppointmentModal = ({ property, onClose }: AppointmentModalProps) => {
           />
           <input
             type="tel"
-            placeholder="Phone (09XX or +639XX) *"
+            placeholder="Phone (09XX or +639XX) - Optional"
             className="w-full px-4 py-2 border rounded"
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            required
           />
 
           <input

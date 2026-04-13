@@ -1,10 +1,32 @@
 import { useState, useEffect } from 'react';
-import { inquiriesAPI } from '../../services/api';
+import { commissionsAPI, inquiriesAPI, usersAPI } from '../../services/api';
 import type { Inquiry, User } from '../../types';
 import { getUser } from '../../utils/session';
 
 interface AgentDashboardProps {
   user: User | null;
+}
+
+interface AgentPerformanceData {
+  agentId: string;
+  averageRating: number;
+  feedbackCount: number;
+  conversionRate: number;
+  soldProperties: Array<{
+    id: string;
+    title: string;
+    location: string;
+    sale_price?: number;
+    sold_at?: string;
+  }>;
+  recentFeedback: Array<{
+    appointment_id: string;
+    rating: number;
+    comment?: string;
+    created_at: string;
+    customer_name?: string;
+    property_title?: string;
+  }>;
 }
 
 const AgentDashboard = ({ user }: AgentDashboardProps) => {
@@ -18,6 +40,9 @@ const AgentDashboard = ({ user }: AgentDashboardProps) => {
   const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
   const [effectiveUser, setEffectiveUser] = useState<User | null>(null);
+  const [performance, setPerformance] = useState<AgentPerformanceData | null>(null);
+  const [commissionSummary, setCommissionSummary] = useState({ totalDeals: 0, totalCommission: 0, totalSales: 0 });
+  const [license, setLicense] = useState<any>(null);
 
   useEffect(() => {
     const u = user || getUser();
@@ -35,6 +60,9 @@ const AgentDashboard = ({ user }: AgentDashboardProps) => {
   const loadDashboardData = async (u: User) => {
     try {
       const response = await inquiriesAPI.getAll();
+      const performanceRes = await usersAPI.getAgentPerformance();
+      const commissionsRes = await commissionsAPI.getAll();
+      const licenseRes = await usersAPI.getAgentLicense(u.id);
       const allInquiries = response.data;
       
       const myInquiries = allInquiries.filter((i: Inquiry) => i.assignedTo === u.id);
@@ -42,7 +70,7 @@ const AgentDashboard = ({ user }: AgentDashboardProps) => {
       setStats({
         totalInquiries: myInquiries.length,
         pendingInquiries: myInquiries.filter((i: Inquiry) => i.status === 'new' || i.status === 'claimed' || i.status === 'assigned').length,
-        contactedInquiries: myInquiries.filter((i: Inquiry) => i.status === 'in-progress').length,
+        contactedInquiries: myInquiries.filter((i: Inquiry) => i.status === 'contacted' || i.status === 'in-progress').length,
         closedInquiries: myInquiries.filter((i: Inquiry) => i.status === 'deal-successful' || i.status === 'deal-cancelled').length
       });
 
@@ -51,6 +79,11 @@ const AgentDashboard = ({ user }: AgentDashboardProps) => {
           .sort((a: Inquiry, b: Inquiry) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, 5)
       );
+
+      const perfRows = performanceRes.data?.data || [];
+      setPerformance(perfRows.find((row: AgentPerformanceData) => row.agentId === u.id) || null);
+      setCommissionSummary(commissionsRes.data?.summary || { totalDeals: 0, totalCommission: 0, totalSales: 0 });
+      setLicense(licenseRes.data || null);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
       setError('Failed to load dashboard data. Please try again later.');
@@ -175,6 +208,126 @@ const AgentDashboard = ({ user }: AgentDashboardProps) => {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">My Performance</h2>
+          {!performance ? (
+            <p className="text-gray-600">No performance data yet.</p>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Average Rating</span>
+                <span className="font-semibold text-amber-700">
+                  {performance.averageRating.toFixed(2)} / 5 ({performance.feedbackCount} reviews)
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Conversion Rate</span>
+                <span className="font-semibold text-blue-700">{performance.conversionRate.toFixed(2)}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Properties Sold</span>
+                <span className="font-semibold text-green-700">{performance.soldProperties.length}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Commission Overview</h2>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">Sold Deals</span>
+              <span className="font-semibold text-gray-900">{commissionSummary.totalDeals}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">Total Sales</span>
+              <span className="font-semibold text-blue-700">₱{Number(commissionSummary.totalSales || 0).toLocaleString()}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">Total Commission</span>
+              <span className="font-semibold text-green-700">₱{Number(commissionSummary.totalCommission || 0).toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Customer Feedback</h2>
+          {!performance || performance.recentFeedback.length === 0 ? (
+            <p className="text-gray-600">No feedback received yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {performance.recentFeedback.map((item) => (
+                <div key={item.appointment_id} className="p-3 border border-gray-100 rounded-lg bg-gray-50">
+                  <p className="text-sm font-semibold text-amber-700">
+                    {'★'.repeat(item.rating)}{'☆'.repeat(5 - item.rating)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {item.customer_name || 'Customer'} • {item.property_title || 'Property'}
+                  </p>
+                  {item.comment && <p className="text-sm text-gray-700 mt-1">{item.comment}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-8 bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">License Status</h2>
+        {!license ? (
+          <p className="text-gray-600">No license record yet.</p>
+        ) : (
+          <div className="space-y-2 mb-6">
+            <p className="text-sm text-gray-700"><span className="font-semibold">License:</span> {license.license_number || '-'}</p>
+            <p className="text-sm text-gray-700"><span className="font-semibold">Type:</span> {license.license_type || '-'}</p>
+            <p className="text-sm text-gray-700"><span className="font-semibold">Expiry:</span> {license.license_expiry_date ? new Date(license.license_expiry_date).toLocaleDateString() : '-'}</p>
+            <p className="text-sm text-gray-700"><span className="font-semibold">Status:</span> {license.license_status || 'pending'}</p>
+            <button
+              onClick={async () => {
+                try {
+                  const response = await usersAPI.downloadAgentLicense(license.id || effectiveUser?.id || '');
+                  const blob = new Blob([response.data]);
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'my-license.pdf';
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  URL.revokeObjectURL(url);
+                } catch (error) {
+                  console.error('Failed to download license file:', error);
+                }
+              }}
+              className="px-3 py-1 border rounded text-sm hover:bg-gray-50"
+            >
+              Download License File
+            </button>
+          </div>
+        )}
+
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Properties Sold</h2>
+        {!performance || performance.soldProperties.length === 0 ? (
+          <p className="text-gray-600">No sold properties recorded yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {performance.soldProperties.map((property) => (
+              <div key={property.id} className="p-3 border border-gray-100 rounded-lg flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-gray-800">{property.title}</p>
+                  <p className="text-xs text-gray-500">{property.location}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-green-700">₱{Number(property.sale_price || 0).toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">{property.sold_at ? new Date(property.sold_at).toLocaleDateString() : '-'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

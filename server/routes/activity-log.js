@@ -8,6 +8,18 @@ const paginate = (total, data, page, limit) => ({
   pagination: { page, limit, total, pages: Math.ceil(total / limit) }
 });
 
+// Transform snake_case DB fields to camelCase for frontend
+const transformActivityLog = (log) => {
+  if (!log) return null;
+  return {
+    id: log.id,
+    action: log.action,
+    details: log.details,
+    performedBy: log.performed_by,
+    timestamp: log.timestamp
+  };
+};
+
 // GET activity logs (protected, paginated)
 router.get('/', authenticateToken, async (req, res) => {
   try {
@@ -21,7 +33,8 @@ router.get('/', authenticateToken, async (req, res) => {
       [limit, offset]
     );
 
-    res.json(paginate(total, rows, page, limit));
+    const transformedRows = rows.map(transformActivityLog);
+    res.json(paginate(total, transformedRows, page, limit));
   } catch (error) {
     console.error('Failed to fetch activity logs:', error);
     res.status(500).json({ error: 'Failed to fetch activity logs' });

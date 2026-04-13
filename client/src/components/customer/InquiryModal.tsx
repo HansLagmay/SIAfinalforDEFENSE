@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Property } from '../../types';
 import { inquiriesAPI } from '../../services/api';
 import ImageGallery from './ImageGallery';
-import { getPropertyImage } from '../../utils/formatters';
+import { getPropertyShowcaseImages } from '../../utils/formatters';
+import LoginSignupModal from './LoginSignupModal';
+import PhoneVerificationModal from './PhoneVerificationModal';
 
 interface InquiryModalProps {
   property: Property;
@@ -10,6 +12,13 @@ interface InquiryModalProps {
 }
 
 const InquiryModal = ({ property, onClose }: InquiryModalProps) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [customerUser, setCustomerUser] = useState<any>(null);
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,14 +35,47 @@ const InquiryModal = ({ property, onClose }: InquiryModalProps) => {
   const [error, setError] = useState('');
   const [ticketNumber, setTicketNumber] = useState('');
 
+  const sourceImages = property.images && property.images.length > 0
+    ? property.images
+    : [property.imageUrl];
+  const galleryImages = getPropertyShowcaseImages(sourceImages, property.type, property.id || property.title, 4);
+
+  useEffect(() => {
+    // Check if customer is logged in
+    const storedUser = localStorage.getItem('customer_user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setCustomerUser(user);
+        setIsAuthenticated(true);
+        // Pre-fill form with user data
+        setFormData(prev => ({
+          ...prev,
+          name: user.name || '',
+          email: user.email || '',
+          phone: user.phone || ''
+        }));
+      } catch (error) {
+        console.error('Failed to parse customer user');
+      }
+    } else {
+      // Show login prompt after a short delay
+      setShowLoginPrompt(true);
+    }
+  }, []);
+
   const validateInquiry = (data: typeof formData) => {
     const errors: string[] = [];
     
-    // Phone format validation: 0917-XXX-XXXX or 09171234567 or +639171234567
-    const phoneRegex = /^(09|\+639)\d{9}$/;
-    const cleanPhone = data.phone.replace(/[-\s]/g, '');
-    if (!phoneRegex.test(cleanPhone)) {
-      errors.push('Invalid Philippine phone number format (e.g., 0917-123-4567 or +639171234567)');
+    // Phone is required for logged-in customers
+    if (!data.phone || !data.phone.trim()) {
+      errors.push('Phone number is required. Please update your profile phone number before sending an inquiry.');
+    } else {
+      const phoneRegex = /^(09|\+639)\d{9}$/;
+      const cleanPhone = data.phone.replace(/[-\s]/g, '');
+      if (!phoneRegex.test(cleanPhone)) {
+        errors.push('Invalid Philippine phone number format (e.g., 0917-123-4567 or +639171234567)');
+      }
     }
     
     // Email validation
@@ -42,9 +84,11 @@ const InquiryModal = ({ property, onClose }: InquiryModalProps) => {
       errors.push('Invalid email address');
     }
     
-    // Message minimum length
-    if (!data.message || data.message.trim().length < 20) {
-      errors.push('Message must be at least 20 characters');
+    // Message validation (max 150 characters only, no minimum)
+    if (!data.message || data.message.trim().length === 0) {
+      errors.push('Message is required');
+    } else if (data.message.trim().length > 150) {
+      errors.push('Message cannot exceed 150 characters');
     }
     
     return errors;
@@ -53,14 +97,14 @@ const InquiryModal = ({ property, onClose }: InquiryModalProps) => {
   const checkDuplicateInquiry = async (email: string, propertyId: string) => {
     try {
       const response = await inquiriesAPI.getAll();
-      const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
       
+      // One active inquiry per property - resets when inquiry reaches terminal state
       const existingInquiry = response.data.find((inq: any) => 
         inq.email.toLowerCase() === email.toLowerCase() && 
         inq.propertyId === propertyId &&
-        new Date(inq.createdAt).getTime() > sevenDaysAgo &&
-        inq.status !== 'closed' && 
-        inq.status !== 'cancelled'
+        inq.status !== 'deal-successful' && 
+        inq.status !== 'deal-cancelled' &&
+        inq.status !== 'no-response'
       );
       
       if (existingInquiry) {
@@ -105,15 +149,22 @@ const InquiryModal = ({ property, onClose }: InquiryModalProps) => {
         formData.contactMethods.phone ? 'Phone' : null,
         formData.contactMethods.sms ? 'SMS' : null,
       ].filter(Boolean).join(', ');
+
+      if (!confirm(`Send inquiry for "${property.title}" now?`)) {
+        setLoading(false);
+        return;
+      }
+
       const messageWithPreferences = preferred
         ? `${formData.message}\n\nPreferred contact methods: ${preferred}`
         : formData.message;
 
       // Submit inquiry with complete data structure
+      const effectivePhone = customerUser?.phone || formData.phone;
       const response = await inquiriesAPI.create({
         name: formData.name,
         email: formData.email,
-        phone: formData.phone,
+        phone: effectivePhone,
         message: messageWithPreferences,
         propertyId: property.id,
         propertyTitle: property.title,
@@ -131,11 +182,110 @@ const InquiryModal = ({ property, onClose }: InquiryModalProps) => {
         onClose();
       }, 2000);
     } catch (err: any) {
+      // Check if error is phone verification required
+      if (err.response?.data?.requiresPhoneVerification) {
+        setError('');
+        setPendingSubmit(true);
+        setShowPhoneVerification(true);
+        setLoading(false);
+        return;
+      }
+      
+      // Check if phone number is required
+      if (err.response?.data?.requiresPhone) {
+        setError('Please add a phone number to your profile before submitting inquiries.');
+        setLoading(false);
+        return;
+      }
+      
       setError(err.response?.data?.error || 'Failed to send inquiry. Please try again.');
     } finally {
-      setLoading(false);
+      if (!showPhoneVerification) {
+        setLoading(false);
+      }
     }
   };
+
+  const handlePhoneVerified = () => {
+    // Update customer user state
+    if (customerUser) {
+      const updatedUser = { ...customerUser, role: 'customer', phoneVerified: true };
+      setCustomerUser(updatedUser);
+      localStorage.setItem('customer_user', JSON.stringify(updatedUser));
+    }
+    
+    // Retry inquiry submission
+    if (pendingSubmit) {
+      setPendingSubmit(false);
+      // Simulate form submit
+      const form = document.querySelector('form');
+      if (form) {
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }
+    }
+  };
+
+  const handleLoginSuccess = (user: any, _token: string, _requiresPhoneVerification?: boolean, _phone?: string) => {
+    setCustomerUser(user);
+    setIsAuthenticated(true);
+    setShowLoginModal(false);
+    setShowLoginPrompt(false);
+    // Pre-fill form with user data
+    setFormData(prev => ({
+      ...prev,
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phone || ''
+    }));
+    
+    // Note: Phone verification is handled by CustomerNavbar after signup
+    // Here we just accept the parameters to match the interface
+  };
+
+  // Show login prompt for unauthenticated users
+  if (showLoginPrompt && !isAuthenticated) {
+    return (
+      <>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-glow animate-scale-in">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Login Required</h3>
+            <p className="text-gray-600 mb-6">
+              Please login or create an account to send an inquiry about this property.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => setShowLoginModal(true)}
+                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+              >
+                Login / Sign Up
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {showLoginModal && (
+          <LoginSignupModal 
+            onClose={() => {
+              setShowLoginModal(false);
+              onClose(); // Also close the inquiry modal
+            }} 
+            onSuccess={handleLoginSuccess}
+          />
+        )}
+      </>
+    );
+  }
 
   if (success) {
     return (
@@ -177,9 +327,7 @@ const InquiryModal = ({ property, onClose }: InquiryModalProps) => {
           {/* Property Image Gallery */}
           <div className="mb-6">
             <ImageGallery 
-              images={property.images && property.images.length > 0 
-                ? property.images.map(img => getPropertyImage(img, property.type))
-                : [getPropertyImage(property.imageUrl, property.type)]}
+              images={galleryImages}
               title={property.title}
             />
           </div>
@@ -242,18 +390,17 @@ const InquiryModal = ({ property, onClose }: InquiryModalProps) => {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number *
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number
               </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                required
-                className="input w-full"
-                placeholder="+63 912 345 6789"
-              />
+              {formData.phone ? (
+                <p className="text-sm text-gray-800 font-semibold">{formData.phone}</p>
+              ) : (
+                <p className="text-sm text-red-700">
+                  No phone number found in your profile. Please update your profile first.
+                </p>
+              )}
             </div>
 
             <div>
@@ -319,22 +466,22 @@ const InquiryModal = ({ property, onClose }: InquiryModalProps) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Message (minimum 20 characters) *
+                Message (maximum 150 characters) *
               </label>
               <textarea
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 required
-                minLength={20}
+                maxLength={150}
                 rows={4}
                 className="input w-full resize-none"
-                placeholder="I'm interested in this property... (Please provide at least 20 characters)"
+                placeholder="I'm interested in this property..."
               />
               <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
-                {formData.message.length}/5000 characters (minimum 20)
+                {formData.message.length}/150 characters
               </p>
             </div>
 
@@ -376,6 +523,19 @@ const InquiryModal = ({ property, onClose }: InquiryModalProps) => {
           </form>
         </div>
       </div>
+
+      {/* Phone Verification Modal */}
+      {showPhoneVerification && customerUser?.phone && (
+        <PhoneVerificationModal
+          isOpen={showPhoneVerification}
+          onClose={() => {
+            setShowPhoneVerification(false);
+            setPendingSubmit(false);
+          }}
+          onVerified={handlePhoneVerified}
+          phone={customerUser.phone}
+        />
+      )}
     </div>
   );
 };

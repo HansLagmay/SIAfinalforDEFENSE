@@ -33,18 +33,24 @@ const getSessionKey = (userId: string): string => `session_user_${userId}`;
 
 // Get or set active session ID for a role (using sessionStorage for tab-specific sessions)
 const getActiveSessionId = (role: User['role']): string | null => {
-  // First check sessionStorage (tab-specific)
+  // Primary source: tab-specific active session to prevent cross-tab collisions.
   const tabSession = sessionStorage.getItem(ACTIVE_SESSION_KEYS[role]);
-  if (tabSession) return tabSession;
-  
-  // Fall back to localStorage for backward compatibility
-  return localStorage.getItem(ACTIVE_SESSION_KEYS[role]);
+  if (tabSession && readUserSession(tabSession)) return tabSession;
+
+  // Fallback for legacy data; copy into tab storage only if still valid.
+  const legacyActive = localStorage.getItem(ACTIVE_SESSION_KEYS[role]);
+  if (legacyActive && readUserSession(legacyActive)) {
+    sessionStorage.setItem(ACTIVE_SESSION_KEYS[role], legacyActive);
+    return legacyActive;
+  }
+
+  return null;
 };
 
 const setActiveSessionId = (role: User['role'], userId: string): void => {
   // Store in sessionStorage for tab-specific sessions
   sessionStorage.setItem(ACTIVE_SESSION_KEYS[role], userId);
-  // Also store in localStorage as a fallback
+  // Keep a localStorage marker for backward compatibility/migration only.
   localStorage.setItem(ACTIVE_SESSION_KEYS[role], userId);
 };
 

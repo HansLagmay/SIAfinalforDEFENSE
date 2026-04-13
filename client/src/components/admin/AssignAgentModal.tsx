@@ -51,10 +51,13 @@ const AssignAgentModal = ({ inquiry, onAssign, onClose }: AssignAgentModalProps)
       return;
     }
 
+    const selectedAgent = agents.find((a: any) => a.id === selectedAgentId);
+    if (!confirm(`Assign ticket ${inquiry.ticketNumber || inquiry.id} to ${selectedAgent?.name || 'selected agent'}?`)) {
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const selectedAgent = agents.find((a: any) => a.id === selectedAgentId);
-      
       await inquiriesAPI.assign(
         inquiry.id,
         selectedAgentId,

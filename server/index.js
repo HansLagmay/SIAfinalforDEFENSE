@@ -41,11 +41,16 @@ app.use('/api', apiLimiter);
 // Routes
 app.use('/api/login', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/customers', require('./routes/customers'));
 app.use('/api/properties', require('./routes/properties'));
 app.use('/api/inquiries', require('./routes/inquiries'));
 app.use('/api/calendar', require('./routes/calendar'));
 app.use('/api/activity-log', require('./routes/activity-log'));
 app.use('/api/database', require('./routes/database'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/commissions', require('./routes/commissions'));
+app.use('/api', require('./routes/documents'));
+app.use('/api', require('./routes/customer-moderation'));
 
 // Root welcome page
 app.get('/', (req, res) => {

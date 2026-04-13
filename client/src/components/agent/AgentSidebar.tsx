@@ -1,6 +1,5 @@
 import { NavLink } from 'react-router-dom';
 import type { User } from '../../types';
-import SessionSwitcher from '../shared/SessionSwitcher';
 
 interface AgentSidebarProps {
   user: User | null;
@@ -9,7 +8,7 @@ interface AgentSidebarProps {
 
 const AgentSidebar = ({ user, onLogout }: AgentSidebarProps) => {
   return (
-    <div className="w-64 bg-gray-800 text-white flex flex-col">
+    <div className="w-full lg:w-64 lg:min-w-64 bg-gray-800 text-white flex flex-col lg:h-screen lg:overflow-hidden lg:sticky lg:top-0">
       <div className="p-6 border-b border-gray-700">
         <h1 className="text-2xl font-bold">TES Property</h1>
         <p className="text-sm text-gray-400 mt-1">Agent Portal</p>
@@ -22,13 +21,10 @@ const AgentSidebar = ({ user, onLogout }: AgentSidebarProps) => {
             <p className="font-semibold text-white truncate">{user.name}</p>
             <p className="text-xs text-gray-400 truncate">{user.email}</p>
           </div>
-          
-          {/* Session Switcher for multi-account demo */}
-          <SessionSwitcher role="agent" currentUser={user} />
         </div>
       )}
 
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 p-4 overflow-hidden">
         <NavLink
           to="/agent/dashboard"
           className={({ isActive }) =>
@@ -92,6 +88,39 @@ const AgentSidebar = ({ user, onLogout }: AgentSidebarProps) => {
             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
           </svg>
           Properties
+        </NavLink>
+
+        <NavLink
+          to="/agent/settings"
+          className={({ isActive }) =>
+            `flex items-center px-4 py-3 rounded-lg mb-2 transition ${
+              isActive
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-300 hover:bg-gray-700'
+            }`
+          }
+        >
+          <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M11.49 3.17a1 1 0 00-1.98 0l-.18 1.06a1 1 0 01-1.45.72l-.94-.5a1 1 0 00-1.36.37l-.99 1.72a1 1 0 00.36 1.36l.94.5a1 1 0 010 1.76l-.94.5a1 1 0 00-.36 1.36l.99 1.72a1 1 0 001.36.37l.94-.5a1 1 0 011.45.72l.18 1.06a1 1 0 001.98 0l.18-1.06a1 1 0 011.45-.72l.94.5a1 1 0 001.36-.37l.99-1.72a1 1 0 00-.36-1.36l-.94-.5a1 1 0 010-1.76l.94-.5a1 1 0 00.36-1.36l-.99-1.72a1 1 0 00-1.36-.37l-.94.5a1 1 0 01-1.45-.72l-.18-1.06zM10 12a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+          </svg>
+          Settings
+        </NavLink>
+
+        <NavLink
+          to="/agent/notifications"
+          className={({ isActive }) =>
+            `flex items-center px-4 py-3 rounded-lg mb-2 transition ${
+              isActive
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-300 hover:bg-gray-700'
+            }`
+          }
+        >
+          <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z" />
+            <path d="M8 15a2 2 0 104 0H8z" />
+          </svg>
+          Notifications
         </NavLink>
       </nav>
 

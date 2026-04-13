@@ -11,13 +11,59 @@ interface ScheduleViewingModalProps {
   onSuccess: () => void;
 }
 
+const parseApiDateTime = (value: string | undefined | null) => {
+  if (!value) return new Date('');
+  const normalized = String(value).trim();
+  const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (match) {
+    const [, y, m, d, hh, mm, ss] = match;
+    return new Date(Number(y), Number(m) - 1, Number(d), Number(hh), Number(mm), Number(ss || '0'));
+  }
+  return new Date(normalized);
+};
+
+const getTodayLocalDateString = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const ScheduleViewingModal = ({ user, inquiry, event, initialDate, onClose, onSuccess }: ScheduleViewingModalProps) => {
   const isEdit = Boolean(event);
-  const initialStart = event ? new Date(event.start) : null;
-  const initialEnd = event ? new Date(event.end) : null;
+  const initialStart = event ? parseApiDateTime(event.start) : null;
+  const initialEnd = event ? parseApiDateTime(event.end) : null;
+  
+  // Format time properly for editing
+  const getLocalDateString = (date: Date | null) => {
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const getLocalTimeString = (date: Date | null) => {
+    if (!date) return '';
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const formatDateTimeForApi = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+  
   const [formData, setFormData] = useState({
-    date: initialStart ? initialStart.toISOString().slice(0, 10) : (initialDate || ''),
-    time: initialStart ? initialStart.toTimeString().slice(0, 5) : '',
+    date: initialStart ? getLocalDateString(initialStart) : (initialDate || ''),
+    time: initialStart ? getLocalTimeString(initialStart) : '',
     duration: initialStart && initialEnd ? Math.round((initialEnd.getTime() - initialStart.getTime()) / 60000).toString() : '60',
     notes: event?.description?.split('\n').slice(1).join('\n') || ''
   });
@@ -31,6 +77,23 @@ const ScheduleViewingModal = ({ user, inquiry, event, initialDate, onClose, onSu
     propertyTitle: ''
   });
 
+  // Update form data when event changes (for editing)
+  useEffect(() => {
+    if (event) {
+      const start = parseApiDateTime(event.start);
+      const end = parseApiDateTime(event.end);
+      setFormData({
+        date: getLocalDateString(start),
+        time: getLocalTimeString(start),
+        duration: Math.round((end.getTime() - start.getTime()) / 60000).toString(),
+        notes: event.description?.split('\n').slice(1).join('\n') || ''
+      });
+      if (event.inquiryId) {
+        setSelectedInquiryId(event.inquiryId);
+      }
+    }
+  }, [event]);
+
   useEffect(() => {
     if (!isEdit && initialDate) {
       setFormData((prev) => ({ ...prev, date: initialDate }));
@@ -42,17 +105,26 @@ const ScheduleViewingModal = ({ user, inquiry, event, initialDate, onClose, onSu
       try {
         const res = await inquiriesAPI.getAll();
         if (!Array.isArray(res.data)) {
+          console.warn('Inquiries response is not an array:', res.data);
           setInquiries([]);
           return;
         }
-        const mine = res.data.filter((i: Inquiry) =>
-          (i.assignedTo === user.id || i.claimedBy === user.id) &&
-          (i.status === 'assigned' || i.status === 'claimed' || i.status === 'in-progress' || i.status === 'viewing-scheduled')
-        );
+        
+        // Filter for inquiries assigned to or claimed by this agent
+        // Include more statuses to show all relevant tickets
+        const mine = res.data.filter((i: Inquiry) => {
+          const isMyTicket = (i.assignedTo === user.id || i.claimedBy === user.id);
+          const validStatus = i.status !== 'deal-cancelled' && i.status !== 'deal-successful';
+          return isMyTicket && validStatus;
+        });
+        
+        console.log('Total inquiries:', res.data.length, 'My tickets:', mine.length);
+        
         // Sort: newest first
         setInquiries(mine.sort((a: Inquiry, b: Inquiry) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       } catch (err) {
         console.error('Failed to load inquiries for scheduling:', err);
+        setInquiries([]);
       }
     };
     loadInquiries();
@@ -98,6 +170,16 @@ const ScheduleViewingModal = ({ user, inquiry, event, initialDate, onClose, onSu
     e.preventDefault();
     
     if (!validateSchedule()) return;
+
+    const targetCustomer = selectedInquiry?.name || manualCustomer.name || 'N/A';
+    const targetProperty = selectedInquiry?.propertyTitle || manualCustomer.propertyTitle || 'N/A';
+    const confirmationMessage = isEdit
+      ? `Confirm update for this viewing?\n\nCustomer: ${targetCustomer}\nProperty: ${targetProperty}\nDate: ${formData.date}\nTime: ${formData.time}`
+      : `Confirm schedule viewing?\n\nCustomer: ${targetCustomer}\nProperty: ${targetProperty}\nDate: ${formData.date}\nTime: ${formData.time}`;
+
+    if (!confirm(confirmationMessage)) {
+      return;
+    }
     
     setSubmitting(true);
     try {
@@ -110,8 +192,8 @@ const ScheduleViewingModal = ({ user, inquiry, event, initialDate, onClose, onSu
       const eventData: Partial<CalendarEvent> = {
         title: `Property Viewing - ${propTitle}`,
         description: `Customer: ${customerName}${selectedInquiry?.ticketNumber ? `\nTicket: ${selectedInquiry.ticketNumber}` : ''}${formData.notes ? `\n${formData.notes}` : ''}`,
-        start: startDateTime.toISOString(),
-        end: endDateTime.toISOString(),
+        start: formatDateTimeForApi(startDateTime),
+        end: formatDateTimeForApi(endDateTime),
         agentId: user.id,
         inquiryId: selectedInquiry?.id || undefined,
         type: 'viewing' as const
@@ -139,7 +221,7 @@ const ScheduleViewingModal = ({ user, inquiry, event, initialDate, onClose, onSu
           ]
         });
         
-        // Note: Property status is kept as 'available' or 'reserved' to allow other buyers to inquire
+        // Note: Property availability stays independent from assignment so other buyers can still inquire
         // Property should only change to 'pending' when an offer is accepted
         // and 'under-contract' when contracts are signed by both parties
       }
@@ -151,9 +233,20 @@ const ScheduleViewingModal = ({ user, inquiry, event, initialDate, onClose, onSu
       console.error('Failed to schedule viewing:', error);
       
       if (error.response?.status === 409) {
-        alert('Conflict detected: You have another event scheduled within 30 minutes of this time.');
+        const conflictData = error.response?.data;
+        let message = 'Schedule Conflict: You have another event within 30 minutes of this time.';
+        
+        if (conflictData?.conflictingEvents && conflictData.conflictingEvents.length > 0) {
+          const conflicts = conflictData.conflictingEvents
+            .map((e: any) => `\n• ${e.title} (${parseApiDateTime(e.start).toLocaleTimeString()} - ${parseApiDateTime(e.end).toLocaleTimeString()})`)
+            .join('');
+          message += '\n\nConflicting events:' + conflicts;
+        }
+        
+        alert(message);
       } else {
-        alert(isEdit ? 'Failed to update viewing' : 'Failed to schedule viewing');
+        const errorMsg = error.response?.data?.error || (isEdit ? 'Failed to update viewing' : 'Failed to schedule viewing');
+        alert(errorMsg);
       }
     } finally {
       setSubmitting(false);
@@ -220,7 +313,7 @@ const ScheduleViewingModal = ({ user, inquiry, event, initialDate, onClose, onSu
               type="date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              min={new Date().toISOString().split('T')[0]}
+              min={getTodayLocalDateString()}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             />
             {errors.date && <p className="text-red-600 text-sm mt-1">{errors.date}</p>}

@@ -5,9 +5,11 @@ interface PropertyListProps {
   properties: Property[];
   onViewDetails: (property: Property) => void;
   onInquire: (property: Property) => void;
+  favoriteIds?: string[];
+  onToggleFavorite?: (property: Property) => void;
 }
 
-const PropertyList = ({ properties, onViewDetails, onInquire }: PropertyListProps) => {
+const PropertyList = ({ properties, onViewDetails, onInquire, favoriteIds = [], onToggleFavorite }: PropertyListProps) => {
   // Calculate days on market
   const daysOnMarket = (createdAt: string) => {
     const created = new Date(createdAt);
@@ -27,7 +29,10 @@ const PropertyList = ({ properties, onViewDetails, onInquire }: PropertyListProp
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-      {properties.map((property, index) => (
+      {properties.map((property, index) => {
+        const primaryImage = property.images && property.images.length > 0 ? property.images[0] : property.imageUrl;
+
+        return (
         <div
           key={property.id}
           className="card-interactive overflow-hidden"
@@ -35,20 +40,40 @@ const PropertyList = ({ properties, onViewDetails, onInquire }: PropertyListProp
         >
           <div className="relative h-56 bg-gradient-to-br from-gray-200 to-gray-300 overflow-hidden group">
             <img
-              src={getPropertyImage(property.imageUrl, property.type)}
+              src={getPropertyImage(primaryImage, property.type, property.id)}
               alt={property.title}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                target.src = getPropertyImage(undefined, property.type);
+                target.src = getPropertyImage(undefined, property.type, property.id);
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             
             <div className="absolute top-4 right-4 flex flex-col gap-2">
+              {onToggleFavorite && (
+                <button
+                  type="button"
+                  onClick={() => onToggleFavorite(property)}
+                  className="bg-white/90 hover:bg-white text-red-500 px-2 py-1 rounded-full shadow-lg"
+                  title={favoriteIds.includes(property.id) ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  {favoriteIds.includes(property.id) ? '❤' : '♡'}
+                </button>
+              )}
               <span className="badge bg-white/90 backdrop-blur-sm text-gray-900 shadow-lg capitalize">
                 {property.type}
               </span>
+              {property.hasVerifiedDocuments && (
+                <span className="badge bg-green-600 text-white shadow-lg text-xs">
+                  Document Verified
+                </span>
+              )}
+              {property.status === 'reserved' && (
+                <span className="badge bg-orange-500 text-white shadow-lg">
+                  ⏱️ Unavailable
+                </span>
+              )}
               {daysOnMarket(property.createdAt) <= 7 && (
                 <span className="badge bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg animate-scale-in">
                   🔥 New!
@@ -123,6 +148,7 @@ const PropertyList = ({ properties, onViewDetails, onInquire }: PropertyListProp
               <button
                 onClick={() => onInquire(property)}
                 className="btn btn-success flex-1"
+                title="Submit inquiry for this property"
               >
                 <span className="flex items-center justify-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,7 +160,8 @@ const PropertyList = ({ properties, onViewDetails, onInquire }: PropertyListProp
             </div>
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

@@ -32,18 +32,46 @@ export const formatNumber = (value: number | string): string => {
  * @param {string} propertyType - Type of property (house, condo, lot, commercial)
  * @returns {string} Placeholder image URL from Unsplash
  */
-export const getPropertyPlaceholder = (propertyType?: string): string => {
+const PROPERTY_PLACEHOLDERS: Record<string, string[]> = {
+  house: [
+    'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop',
+    'https://images.unsplash.com/photo-1576941089067-2de3c901e126?w=800&h=600&fit=crop',
+    'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?w=800&h=600&fit=crop',
+    'https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=800&h=600&fit=crop'
+  ],
+  condo: [
+    'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop',
+    'https://images.unsplash.com/photo-1494526585095-c41746248156?w=800&h=600&fit=crop',
+    'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&h=600&fit=crop',
+    'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop'
+  ],
+  lot: [
+    'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&h=600&fit=crop',
+    'https://images.unsplash.com/photo-1472396961693-142e6e269027?w=800&h=600&fit=crop',
+    'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=800&h=600&fit=crop',
+    'https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=800&h=600&fit=crop'
+  ],
+  commercial: [
+    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=600&fit=crop',
+    'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=800&h=600&fit=crop',
+    'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=800&h=600&fit=crop',
+    'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&h=600&fit=crop'
+  ]
+};
+
+const hashSeed = (seed: string): number => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+};
+
+export const getPropertyPlaceholder = (propertyType?: string, seedKey?: string): string => {
   const type = propertyType?.toLowerCase() || 'house';
-  
-  // Using Unsplash for real property images
-  const placeholders: Record<string, string> = {
-    house: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&h=600&fit=crop',
-    condo: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop',
-    lot: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&h=600&fit=crop',
-    commercial: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=600&fit=crop'
-  };
-  
-  return placeholders[type] || placeholders.house;
+  const bucket = PROPERTY_PLACEHOLDERS[type] || PROPERTY_PLACEHOLDERS.house;
+  const index = seedKey ? hashSeed(seedKey) % bucket.length : 0;
+  return bucket[index];
 };
 
 /**
@@ -52,9 +80,9 @@ export const getPropertyPlaceholder = (propertyType?: string): string => {
  * @param {string} propertyType - Type of property
  * @returns {string} Image URL or placeholder
  */
-export const getPropertyImage = (imagePath?: string, propertyType?: string): string => {
+export const getPropertyImage = (imagePath?: string, propertyType?: string, seedKey?: string): string => {
   if (!imagePath) {
-    return getPropertyPlaceholder(propertyType);
+    return getPropertyPlaceholder(propertyType, seedKey);
   }
   
   // If image path starts with http/https, return as is
@@ -64,7 +92,7 @@ export const getPropertyImage = (imagePath?: string, propertyType?: string): str
   
   // Check if it's a sample image path
   if (imagePath.includes('/uploads/properties/sample')) {
-    return getPropertyPlaceholder(propertyType);
+    return getPropertyPlaceholder(propertyType, seedKey);
   }
   
   // Otherwise, construct the full URL
@@ -72,4 +100,29 @@ export const getPropertyImage = (imagePath?: string, propertyType?: string): str
   const baseURL = API_URL.replace('/api', '');
   
   return `${baseURL}${imagePath}`;
+};
+
+export const getPropertyShowcaseImages = (
+  imagePaths: string[] | undefined,
+  propertyType?: string,
+  seedKey?: string,
+  minCount = 4
+): string[] => {
+  const normalized = Array.isArray(imagePaths) ? imagePaths.filter(Boolean) : [];
+  const actual = normalized.map((img, idx) => getPropertyImage(img, propertyType, `${seedKey || ''}-${idx}`));
+
+  const unique = Array.from(new Set(actual));
+  const targetCount = Math.max(1, minCount);
+
+  let i = 0;
+  while (unique.length < targetCount) {
+    const fallback = getPropertyPlaceholder(propertyType, `${seedKey || propertyType || 'property'}-fallback-${i}`);
+    if (!unique.includes(fallback)) {
+      unique.push(fallback);
+    }
+    i += 1;
+    if (i > 12) break;
+  }
+
+  return unique;
 };

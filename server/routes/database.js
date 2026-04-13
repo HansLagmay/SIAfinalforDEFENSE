@@ -19,6 +19,90 @@ const RECENT_TYPE_MAP = {
   agents: { table: 'users', timestampCol: 'created_at', where: "role = 'agent'" },
 };
 
+// Transform functions for each table
+const transformProperty = (row) => ({
+  id: row.id,
+  title: row.title,
+  type: row.type,
+  price: row.price,
+  location: row.location,
+  bedrooms: row.bedrooms,
+  bathrooms: row.bathrooms,
+  area: row.area,
+  description: row.description,
+  status: row.status,
+  imageUrl: row.image_url,
+  features: typeof row.features === 'string' ? JSON.parse(row.features) : (row.features || []),
+  createdBy: row.created_by,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const transformInquiry = (row) => ({
+  id: row.id,
+  ticketNumber: row.ticket_number,
+  name: row.name,
+  email: row.email,
+  phone: row.phone,
+  message: row.message,
+  propertyId: row.property_id,
+  propertyTitle: row.property_title,
+  propertyPrice: row.property_price,
+  propertyLocation: row.property_location,
+  status: row.status,
+  assignedTo: row.assigned_to,
+  claimedBy: row.claimed_by,
+  assignedBy: row.assigned_by,
+  claimedAt: row.claimed_at,
+  assignedAt: row.assigned_at,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const transformUser = (row) => ({
+  id: row.id,
+  email: row.email,
+  name: row.name,
+  role: row.role,
+  phone: row.phone,
+  createdAt: row.created_at
+});
+
+const transformCalendarEvent = (row) => ({
+  id: row.id,
+  title: row.title,
+  description: row.description,
+  type: row.type,
+  startTime: row.start_time,
+  endTime: row.end_time,
+  agentId: row.agent_id,
+  inquiryId: row.inquiry_id,
+  propertyId: row.property_id,
+  createdBy: row.created_by,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+const transformActivityLog = (row) => ({
+  id: row.id,
+  action: row.action,
+  details: row.details,
+  performedBy: row.performed_by,
+  timestamp: row.timestamp
+});
+
+// Get transformer for table
+const getTransformer = (table) => {
+  switch(table) {
+    case 'properties': return transformProperty;
+    case 'inquiries': return transformInquiry;
+    case 'users': return transformUser;
+    case 'calendar_events': return transformCalendarEvent;
+    case 'activity_log': return transformActivityLog;
+    default: return (row) => row;
+  }
+};
+
 // GET database overview (admin only)
 router.get('/overview', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
@@ -93,7 +177,9 @@ router.get('/file/:filename', authenticateToken, requireRole(['admin']), async (
   if (!table) return res.status(404).json({ error: 'Unknown file' });
   try {
     const [rows] = await pool.execute(`SELECT * FROM \`${table}\``);
-    res.json(rows);
+    const transformer = getTransformer(table);
+    const transformedRows = rows.map(transformer);
+    res.json(transformedRows);
   } catch (error) {
     console.error('Error fetching file data:', error);
     res.status(500).json({ error: error.message });
@@ -110,7 +196,9 @@ router.get('/recent/:type', authenticateToken, requireRole(['admin']), async (re
     const [rows] = await pool.execute(
       `SELECT * FROM \`${mapping.table}\` WHERE \`${mapping.timestampCol}\` >= DATE_SUB(NOW(), INTERVAL 7 DAY)${whereExtra} ORDER BY \`${mapping.timestampCol}\` DESC`
     );
-    res.json(rows);
+    const transformer = getTransformer(mapping.table);
+    const transformedRows = rows.map(transformer);
+    res.json(transformedRows);
   } catch (error) {
     console.error('Error fetching recent records:', error);
     res.status(500).json({ error: error.message });
@@ -158,9 +246,11 @@ router.get('/export/:filename/json', authenticateToken, requireRole(['admin']), 
   if (!table) return res.status(404).json({ error: 'Unknown file' });
   try {
     const [rows] = await pool.execute(`SELECT * FROM \`${table}\``);
+    const transformer = getTransformer(table);
+    const transformedRows = rows.map(transformer);
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', `attachment; filename="${req.params.filename}"`);
-    res.send(JSON.stringify(rows, null, 2));
+    res.send(JSON.stringify(transformedRows, null, 2));
   } catch (error) {
     console.error('Error exporting JSON:', error);
     res.status(500).json({ error: error.message });

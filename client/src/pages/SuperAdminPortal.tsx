@@ -35,8 +35,18 @@ const SuperAdminPortal = () => {
     emergencyName: '',
     emergencyRelationship: '',
     emergencyPhone: '',
+
+    // Section 5: License Information
+    licenseNumber: '',
+    licenseType: 'PRC',
+    licenseIssuedDate: '',
+    licenseExpiryDate: '',
+    brokerId: '',
+
+    // Section 6: Specialization
+    specialization: 'General',
     
-    // Section 5: Account Setup
+    // Section 7: Account Setup
     generatePassword: false,
     manualPassword: '',
     manualPasswordConfirm: ''
@@ -172,6 +182,12 @@ const SuperAdminPortal = () => {
         email: email,
         password: password,
         phone: formData.phone,
+        specialization: formData.specialization,
+        licenseNumber: formData.licenseNumber || undefined,
+        licenseType: formData.licenseType || undefined,
+        licenseIssuedDate: formData.licenseIssuedDate || undefined,
+        licenseExpiryDate: formData.licenseExpiryDate || undefined,
+        brokerId: formData.brokerId || undefined,
         employmentData: {
           position: formData.position,
           department: formData.department,
@@ -244,6 +260,7 @@ const SuperAdminPortal = () => {
                   email: '', phone: '', address: '', city: '',
                   position: '', department: '', startDate: '', employmentType: 'Full-time',
                   emergencyName: '', emergencyRelationship: '', emergencyPhone: '',
+                  licenseNumber: '', licenseType: 'PRC', licenseIssuedDate: '', licenseExpiryDate: '', brokerId: '', specialization: 'General',
                   generatePassword: false,
                   manualPassword: '',
                   manualPasswordConfirm: ''
@@ -270,7 +287,7 @@ const SuperAdminPortal = () => {
             >
               ← Back to Admin Portal
             </button>
-            <h1 className="text-3xl font-bold text-white">HR Portal - Agent Registration</h1>
+            <h1 className="text-3xl font-bold text-white">Agent Registration Portal</h1>
             <p className="text-blue-100 mt-2">Scroll to complete all sections below</p>
           </div>
 
@@ -516,15 +533,101 @@ const SuperAdminPortal = () => {
               </div>
             </div>
 
-            {/* Section 5: Account Setup */}
+            {/* Section 5: License Information */}
+            <div className="space-y-4 border-b border-gray-200 pb-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Section 5: License Information</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">License Number</label>
+                  <input
+                    type="text"
+                    name="licenseNumber"
+                    value={formData.licenseNumber}
+                    onChange={handleInputChange}
+                    placeholder="PRC-2024-10001"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">License Type</label>
+                  <select
+                    name="licenseType"
+                    value={formData.licenseType}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="PRC">PRC</option>
+                    <option value="DHSUD">DHSUD</option>
+                    <option value="Broker">Broker</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Issued Date</label>
+                  <input
+                    type="date"
+                    name="licenseIssuedDate"
+                    value={formData.licenseIssuedDate}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Expiry Date</label>
+                  <input
+                    type="date"
+                    name="licenseExpiryDate"
+                    value={formData.licenseExpiryDate}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Broker ID</label>
+                  <input
+                    type="text"
+                    name="brokerId"
+                    value={formData.brokerId}
+                    onChange={handleInputChange}
+                    placeholder="BRK-101"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 border-b border-gray-200 pb-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Section 6: Specialization</h3>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Specialization *</label>
+                <select
+                  name="specialization"
+                  value={formData.specialization}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="General">General</option>
+                  <option value="Condo">Condo</option>
+                  <option value="House">House</option>
+                  <option value="Lot">Lot</option>
+                  <option value="Commercial">Commercial</option>
+                  <option value="Luxury">Luxury</option>
+                  <option value="Investment">Investment</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Used to prioritize the best-fit properties in assignment.</p>
+              </div>
+            </div>
+
+            {/* Section 6: Account Setup */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Section 5: Account Setup</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Section 7: Account Setup</h3>
               <div className="bg-gray-50 p-6 rounded-lg space-y-3 text-sm mb-4">
                 <p><strong>Name:</strong> {formData.firstName} {formData.lastName || '...'}</p>
                 <p><strong>Email:</strong> {formData.email || '...'}</p>
                 <p><strong>Phone:</strong> {formData.phone || '...'}</p>
                 <p><strong>Position:</strong> {formData.position || '...'}</p>
                 <p><strong>Department:</strong> {formData.department || '...'}</p>
+                <p><strong>Specialization:</strong> {formData.specialization || '...'}</p>
                 <p><strong>Start Date:</strong> {formData.startDate || '...'}</p>
               </div>
               

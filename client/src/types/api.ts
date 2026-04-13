@@ -27,13 +27,17 @@ export interface TableRow {
 // Validation types
 export interface PropertyValidationData {
   title: string;
+  type: string;
   price: number;
+  location: string;
   bedrooms: number;
   bathrooms: number;
   area: number;
+  description: string;
 }
 
 export interface InquiryValidationData {
+  name: string;
   phone: string;
   email: string;
   message: string;

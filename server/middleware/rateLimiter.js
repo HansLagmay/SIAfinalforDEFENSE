@@ -1,8 +1,10 @@
 const rateLimit = require('express-rate-limit');
 
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: isDevelopment ? 1000 : 5,
   message: { error: 'Too many login attempts. Please try again in 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -11,7 +13,7 @@ const loginLimiter = rateLimit({
 
 const inquiryLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 3,
+  max: 20,
   message: { error: 'Too many inquiries submitted. Please try again in 1 hour.' },
   standardHeaders: true,
   legacyHeaders: false
@@ -27,7 +29,7 @@ const propertyCreationLimiter = rateLimit({
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 500,
   message: { error: 'Too many requests. Please slow down.' },
   standardHeaders: true,
   legacyHeaders: false

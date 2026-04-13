@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { Property } from '../../types';
-import { propertiesAPI } from '../../services/api';
+import { documentsAPI, propertiesAPI } from '../../services/api';
 import ImageGallery from './ImageGallery';
-import { formatPrice, getPropertyImage } from '../../utils/formatters';
+import { formatPrice, getPropertyShowcaseImages } from '../../utils/formatters';
 
 interface PropertyDetailModalProps {
   property: Property;
@@ -11,6 +11,8 @@ interface PropertyDetailModalProps {
 }
 
 const PropertyDetailModal = ({ property, onClose, onInquire }: PropertyDetailModalProps) => {
+  const [documents, setDocuments] = useState<Array<{ id: string; file_name: string; document_type: string }>>([]);
+
   // Increment view count when modal opens
   useEffect(() => {
     const incrementViewCount = async () => {
@@ -33,6 +35,46 @@ const PropertyDetailModal = ({ property, onClose, onInquire }: PropertyDetailMod
     incrementViewCount();
   }, [property.id]);
 
+  useEffect(() => {
+    const loadDocuments = async () => {
+      const customerToken = localStorage.getItem('customer_token');
+      if (!customerToken) {
+        setDocuments([]);
+        return;
+      }
+
+      try {
+        const response = await documentsAPI.listByPropertyWithToken(property.id, customerToken);
+        setDocuments(response.data?.data || []);
+      } catch (error) {
+        console.error('Failed to load property documents:', error);
+        setDocuments([]);
+      }
+    };
+
+    loadDocuments();
+  }, [property.id]);
+
+  const downloadDocument = async (id: string, fileName: string) => {
+    const customerToken = localStorage.getItem('customer_token');
+    if (!customerToken) return;
+
+    try {
+      const response = await documentsAPI.downloadWithToken(id, customerToken);
+      const blob = new Blob([response.data]);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to download document:', error);
+    }
+  };
+
   // Calculate days on market
   const daysOnMarket = () => {
     const created = new Date(property.createdAt);
@@ -42,10 +84,11 @@ const PropertyDetailModal = ({ property, onClose, onInquire }: PropertyDetailMod
     return diffDays;
   };
 
-  // Get all images (use images array if available, otherwise fallback to single imageUrl)
-  const allImages = property.images && property.images.length > 0 
-    ? property.images.map(img => getPropertyImage(img, property.type))
-    : [getPropertyImage(property.imageUrl, property.type)];
+  // Build a richer gallery even when only one image exists.
+  const sourceImages = property.images && property.images.length > 0
+    ? property.images
+    : [property.imageUrl];
+  const allImages = getPropertyShowcaseImages(sourceImages, property.type, property.id || property.title, 4);
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
@@ -69,10 +112,18 @@ const PropertyDetailModal = ({ property, onClose, onInquire }: PropertyDetailMod
               <span className="badge badge-primary">
                 {property.type}
               </span>
+              {property.status === 'reserved' && (
+                <span className="badge bg-orange-500 text-white shadow-lg">
+                  ⏱️ Unavailable
+                </span>
+              )}
               {daysOnMarket() <= 7 && (
                 <span className="badge badge-danger animate-pulse">
                   🔥 New Listing
                 </span>
+              )}
+              {property.hasVerifiedDocuments && (
+                <span className="badge bg-green-600 text-white">✅ Document Verified</span>
               )}
               {daysOnMarket() > 90 && (
                 <span className="badge badge-warning text-xs">
@@ -154,6 +205,28 @@ const PropertyDetailModal = ({ property, onClose, onInquire }: PropertyDetailMod
             </div>
           </div>
 
+          {documents.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Compliance Documents</h3>
+              <div className="space-y-2">
+                {documents.map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                    <div>
+                      <p className="font-medium text-gray-800">{doc.file_name}</p>
+                      <p className="text-xs text-gray-500">{doc.document_type}</p>
+                    </div>
+                    <button
+                      onClick={() => downloadDocument(doc.id, doc.file_name)}
+                      className="px-3 py-1 border rounded text-sm hover:bg-gray-100"
+                    >
+                      Download
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-4">
             <button
               onClick={onClose}
@@ -164,6 +237,7 @@ const PropertyDetailModal = ({ property, onClose, onInquire }: PropertyDetailMod
             <button
               onClick={onInquire}
               className="btn btn-success flex-1 py-3 shadow-elevated hover:shadow-glow"
+              title="Send your inquiry"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />

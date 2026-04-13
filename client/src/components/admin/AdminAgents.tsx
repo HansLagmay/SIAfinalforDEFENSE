@@ -22,14 +22,14 @@ const AdminAgents = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this agent?')) return;
+    if (!confirm('Archive this agent account?')) return;
 
     try {
       await usersAPI.delete(id);
       await loadAgents();
     } catch (error) {
       console.error('Failed to delete agent:', error);
-      alert('Failed to delete agent');
+      alert('Failed to archive agent');
     }
   };
 
@@ -41,13 +41,13 @@ const AdminAgents = () => {
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-gray-800">Agents</h1>
-        <p className="text-gray-600">Use HR Portal to add new agents</p>
+        <p className="text-gray-600">Use Agent Registration to add new agents</p>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {agents.length === 0 ? (
           <div className="p-8 text-center text-gray-600">
-            No agents found. Use the HR Portal to add agents.
+            No agents found. Use the Agent Registration to add agents.
           </div>
         ) : (
           <table className="min-w-full divide-y divide-gray-200">
@@ -99,7 +99,7 @@ const AdminAgents = () => {
                       onClick={() => handleDelete(agent.id)}
                       className="text-red-600 hover:text-red-900"
                     >
-                      Delete
+                      Archive
                     </button>
                   </td>
                 </tr>

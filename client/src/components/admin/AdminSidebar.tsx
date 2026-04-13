@@ -11,7 +11,7 @@ const AdminSidebar = ({ user, onLogout }: AdminSidebarProps) => {
   const navigate = useNavigate();
 
   return (
-    <div className="w-64 bg-gray-800 text-white flex flex-col">
+    <div className="w-full lg:w-64 lg:min-w-64 bg-gray-800 text-white flex flex-col lg:h-screen lg:overflow-hidden lg:sticky lg:top-0">
       <div className="p-6 border-b border-gray-700">
         <h1 className="text-2xl font-bold">TES Property</h1>
         <p className="text-sm text-gray-400 mt-1">Admin Portal</p>
@@ -30,7 +30,7 @@ const AdminSidebar = ({ user, onLogout }: AdminSidebarProps) => {
         </div>
       )}
 
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 p-4 overflow-hidden">
         <NavLink
           to="/admin/dashboard"
           className={({ isActive }) =>
@@ -81,6 +81,22 @@ const AdminSidebar = ({ user, onLogout }: AdminSidebarProps) => {
         </NavLink>
 
         <NavLink
+          to="/admin/property-assignment"
+          className={({ isActive }) =>
+            `flex items-center px-4 py-3 rounded-lg mb-2 transition ${
+              isActive
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-300 hover:bg-gray-700'
+            }`
+          }
+        >
+          <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v2h8v-2zM2 8a2 2 0 11-4 0 2 2 0 014 0zM6 15a3 3 0 00-3 3v2h8v-2a3 3 0 00-3-3H6z" />
+          </svg>
+          Property Assignment
+        </NavLink>
+
+        <NavLink
           to="/admin/agents"
           className={({ isActive }) =>
             `flex items-center px-4 py-3 rounded-lg mb-2 transition ${
@@ -112,6 +128,54 @@ const AdminSidebar = ({ user, onLogout }: AdminSidebarProps) => {
           Agent Performance
         </NavLink>
 
+        <NavLink
+          to="/admin/commissions"
+          className={({ isActive }) =>
+            `flex items-center px-4 py-3 rounded-lg mb-2 transition ${
+              isActive
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-300 hover:bg-gray-700'
+            }`
+          }
+        >
+          <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 2a1 1 0 011 1v1.09A5.002 5.002 0 0115 9v5a2 2 0 01-2 2H7a2 2 0 01-2-2V9a5.002 5.002 0 014-4.91V3a1 1 0 011-1z" />
+          </svg>
+          Payroll and Commissions
+        </NavLink>
+
+        <NavLink
+          to="/admin/licenses"
+          className={({ isActive }) =>
+            `flex items-center px-4 py-3 rounded-lg mb-2 transition ${
+              isActive
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-300 hover:bg-gray-700'
+            }`
+          }
+        >
+          <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 2a1 1 0 01.447.105l6 3A1 1 0 0117 6v4c0 4.418-3.582 7.5-7 8-3.418-.5-7-3.582-7-8V6a1 1 0 01.553-.895l6-3A1 1 0 0110 2zm3.707 6.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          License Compliance
+        </NavLink>
+
+        <NavLink
+          to="/admin/customer-moderation"
+          className={({ isActive }) =>
+            `flex items-center px-4 py-3 rounded-lg mb-2 transition ${
+              isActive
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-300 hover:bg-gray-700'
+            }`
+          }
+        >
+          <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 2a4 4 0 110 8 4 4 0 010-8zM2 16a6 6 0 1112 0v1H2v-1zm13-3h3v2h-3v-2zm0 3h3v2h-3v-2z" />
+          </svg>
+          Customer Moderation
+        </NavLink>
+
         <div className="mt-4 pt-4 border-t border-gray-700">
           <button
             onClick={() => navigate('/superadmin')}
@@ -120,7 +184,7 @@ const AdminSidebar = ({ user, onLogout }: AdminSidebarProps) => {
             <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
             </svg>
-            HR Portal →
+            Agent Registration →
           </button>
           
           <button

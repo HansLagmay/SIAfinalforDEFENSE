@@ -13,6 +13,49 @@
 
 const Joi = require('joi');
 
+const PROPERTY_TYPES = ['House', 'Condominium', 'Villa', 'Apartment', 'Condo', 'Lot', 'Commercial'];
+const PROPERTY_STATUSES = ['draft', 'available', 'reserved', 'under-contract', 'sold', 'withdrawn', 'off-market'];
+const INQUIRY_STATUSES = [
+  'new',
+  'claimed',
+  'assigned',
+  'contacted',
+  'in-progress',
+  'viewing-scheduled',
+  'negotiating',
+  'viewed-interested',
+  'viewed-not-interested',
+  'deal-successful',
+  'deal-cancelled',
+  'no-response'
+];
+
+const normalizePhoneNumber = (value, helpers) => {
+  if (value === null || value === undefined || value === '') {
+    return value;
+  }
+
+  if (typeof value !== 'string') {
+    return helpers.error('string.base');
+  }
+
+  const cleanPhone = value.replace(/[\s\-()]/g, '');
+  if (!/^(09|\+639)\d{9}$/.test(cleanPhone)) {
+    return helpers.error('string.pattern.base');
+  }
+
+  return cleanPhone;
+};
+
+const imagePathSchema = Joi.string()
+  .max(500)
+  .pattern(/^(https?:\/\/|\/uploads\/|$)/)
+  .allow('', null)
+  .messages({
+    'string.max': 'Image path cannot exceed 500 characters',
+    'string.pattern.base': 'Image must be a valid URL or uploaded file path'
+  });
+
 // ============================================================
 // PROPERTY VALIDATION SCHEMA
 // ============================================================
@@ -29,10 +72,10 @@ const propertySchema = Joi.object({
     }),
   
   type: Joi.string()
-    .valid('House', 'Condo', 'Lot', 'Commercial')
+    .valid(...PROPERTY_TYPES)
     .required()
     .messages({
-      'any.only': 'Property type must be one of: House, Condo, Lot, Commercial',
+      'any.only': `Property type must be one of: ${PROPERTY_TYPES.join(', ')}`,
       'any.required': 'Property type is required'
     }),
   
@@ -89,33 +132,125 @@ const propertySchema = Joi.object({
     }),
   
   description: Joi.string()
+    .min(20)
     .max(5000)
-    .allow('', null)
+    .required()
     .messages({
+      'string.min': 'Description must be at least 20 characters',
       'string.max': 'Description cannot exceed 5000 characters'
     }),
   
   status: Joi.string()
-    .valid('available', 'sold', 'reserved', 'draft')
+    .valid(...PROPERTY_STATUSES)
     .default('available')
     .messages({
-      'any.only': 'Status must be one of: available, sold, reserved, draft'
+      'any.only': `Status must be one of: ${PROPERTY_STATUSES.join(', ')}`
     }),
   
-  imageUrl: Joi.string()
-    .uri()
-    .allow('', null)
-    .messages({
-      'string.uri': 'Image URL must be a valid URL'
-    }),
+  imageUrl: imagePathSchema,
   
   images: Joi.array()
-    .items(Joi.string().uri())
+    .items(imagePathSchema)
     .max(10)
     .messages({
       'array.max': 'Cannot upload more than 10 images'
     }),
   
+  features: Joi.array()
+    .items(Joi.string().max(100))
+    .max(20)
+    .default([])
+    .messages({
+      'array.max': 'Cannot have more than 20 features'
+    })
+});
+
+const propertyDraftSchema = Joi.object({
+  title: Joi.string()
+    .min(3)
+    .max(255)
+    .required()
+    .messages({
+      'string.min': 'Property title must be at least 3 characters',
+      'string.max': 'Property title cannot exceed 255 characters',
+      'any.required': 'Property title is required'
+    }),
+
+  type: Joi.string()
+    .valid(...PROPERTY_TYPES)
+    .default('House')
+    .messages({
+      'any.only': `Property type must be one of: ${PROPERTY_TYPES.join(', ')}`
+    }),
+
+  price: Joi.number()
+    .min(0)
+    .max(1000000000)
+    .default(0)
+    .messages({
+      'number.min': 'Price cannot be negative',
+      'number.max': 'Price cannot exceed ₱1,000,000,000'
+    }),
+
+  location: Joi.string()
+    .max(255)
+    .allow('', null)
+    .messages({
+      'string.max': 'Location cannot exceed 255 characters'
+    }),
+
+  bedrooms: Joi.number()
+    .integer()
+    .min(0)
+    .max(10)
+    .default(0)
+    .messages({
+      'number.min': 'Bedrooms cannot be negative',
+      'number.max': 'Bedrooms cannot exceed 10'
+    }),
+
+  bathrooms: Joi.number()
+    .integer()
+    .min(0)
+    .max(10)
+    .default(0)
+    .messages({
+      'number.min': 'Bathrooms cannot be negative',
+      'number.max': 'Bathrooms cannot exceed 10'
+    }),
+
+  area: Joi.number()
+    .min(0)
+    .max(10000)
+    .default(0)
+    .messages({
+      'number.min': 'Area cannot be negative',
+      'number.max': 'Area cannot exceed 10,000 sqm'
+    }),
+
+  description: Joi.string()
+    .max(5000)
+    .allow('', null)
+    .messages({
+      'string.max': 'Description cannot exceed 5000 characters'
+    }),
+
+  status: Joi.string()
+    .valid('draft', 'available')
+    .default('draft')
+    .messages({
+      'any.only': 'Draft status must be draft or available'
+    }),
+
+  imageUrl: imagePathSchema,
+
+  images: Joi.array()
+    .items(imagePathSchema)
+    .max(10)
+    .messages({
+      'array.max': 'Cannot upload more than 10 images'
+    }),
+
   features: Joi.array()
     .items(Joi.string().max(100))
     .max(20)
@@ -149,19 +284,20 @@ const inquirySchema = Joi.object({
     }),
   
   phone: Joi.string()
-    .pattern(/^(09|\+639)\d{9}$/)
-    .allow('', null)
+    .custom(normalizePhoneNumber, 'Philippine phone normalization')
+    .required()
     .messages({
-      'string.pattern.base': 'Please provide a valid Philippine phone number (e.g., 09171234567)'
+      'string.pattern.base': 'Please provide a valid Philippine phone number (e.g., 09171234567)',
+      'any.required': 'Phone number is required'
     }),
   
   message: Joi.string()
     .min(20)
-    .max(5000)
+    .max(2000)
     .required()
     .messages({
       'string.min': 'Message must be at least 20 characters',
-      'string.max': 'Message cannot exceed 5000 characters',
+      'string.max': 'Message cannot exceed 2000 characters',
       'any.required': 'Message is required'
     }),
   
@@ -198,12 +334,10 @@ const agentSchema = Joi.object({
     }),
   
   password: Joi.string()
-    .min(8)
-    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .min(6)
     .required()
     .messages({
-      'string.min': 'Password must be at least 8 characters',
-      'string.pattern.base': 'Password must contain uppercase, lowercase, number, and special character',
+      'string.min': 'Password must be at least 6 characters',
       'any.required': 'Password is required'
     }),
   
@@ -218,11 +352,19 @@ const agentSchema = Joi.object({
     }),
   
   phone: Joi.string()
-    .pattern(/^(09|\+639)\d{9}$/)
+    .custom(normalizePhoneNumber, 'Philippine phone normalization')
     .allow('', null)
     .messages({
       'string.pattern.base': 'Please provide a valid Philippine phone number'
-    })
+    }),
+
+  licenseNumber: Joi.string().max(120).allow('', null),
+  licenseType: Joi.string().max(80).allow('', null),
+  licenseIssuedDate: Joi.date().iso().allow(null),
+  licenseExpiryDate: Joi.date().iso().allow(null),
+  licenseVerified: Joi.boolean().default(false),
+  brokerId: Joi.string().max(120).allow('', null),
+  specialization: Joi.string().max(120).allow('', null)
 });
 
 // ============================================================
@@ -286,26 +428,112 @@ const calendarEventSchema = Joi.object({
 // ============================================================
 
 // Allow partial updates - all fields optional
-const propertyUpdateSchema = propertySchema.fork(
-  ['title', 'type', 'price', 'location', 'bedrooms', 'bathrooms', 'area'],
-  (schema) => schema.optional()
-);
+const propertyUpdateSchema = propertySchema
+  .fork(
+    ['title', 'type', 'price', 'location', 'bedrooms', 'bathrooms', 'area', 'description'],
+    (schema) => schema.optional()
+  )
+  .keys({
+    status: Joi.string().valid(...PROPERTY_STATUSES),
+    imageUrl: imagePathSchema.optional(),
+    images: Joi.array()
+      .items(imagePathSchema)
+      .max(10)
+      .optional()
+      .messages({
+        'array.max': 'Cannot upload more than 10 images'
+      }),
+    features: Joi.array()
+      .items(Joi.string().max(100))
+      .max(20)
+      .optional()
+      .messages({
+        'array.max': 'Cannot have more than 20 features'
+      }),
+    statusHistory: Joi.array().items(
+      Joi.object({
+        status: Joi.string().valid(...PROPERTY_STATUSES).required(),
+        changedBy: Joi.string().required(),
+        changedByName: Joi.string().required(),
+        changedAt: Joi.date().iso().required(),
+        reason: Joi.string().max(500).allow('', null)
+      })
+    ),
+    soldBy: Joi.string().max(255).allow('', null),
+    soldByAgentId: Joi.string().uuid().allow('', null),
+    soldAt: Joi.date().iso().allow(null),
+    salePrice: Joi.number().min(100000).max(1000000000),
+    reservedBy: Joi.string().max(255).allow('', null),
+    reservedAt: Joi.date().iso().allow(null),
+    reservedUntil: Joi.date().iso().allow(null),
+    visibleToCustomers: Joi.boolean(),
+    visible_to_customers: Joi.boolean(),
+    updatedAt: Joi.date().iso(),
+    commission: Joi.object({
+      rate: Joi.number().min(0).max(100).required(),
+      amount: Joi.number().min(0).required(),
+      status: Joi.string().valid('pending', 'paid').required(),
+      paidAt: Joi.date().iso().allow(null),
+      paidBy: Joi.string().allow('', null)
+    }).allow(null)
+  })
+  .prefs({ noDefaults: true });
 
 const inquiryUpdateSchema = Joi.object({
+  name: Joi.string()
+    .min(2)
+    .max(255),
+
+  email: Joi.string()
+    .email()
+    .messages({
+      'string.email': 'Please provide a valid email address'
+    }),
+
+  phone: Joi.string()
+    .custom(normalizePhoneNumber, 'Philippine phone normalization')
+    .allow('', null)
+    .messages({
+      'string.pattern.base': 'Please provide a valid Philippine phone number'
+    }),
+
+  message: Joi.string()
+    .min(20)
+    .max(2000),
+
   status: Joi.string()
-    .valid('new', 'in_progress', 'successful', 'closed', 'cancelled')
+    .valid(...INQUIRY_STATUSES)
     .messages({
       'any.only': 'Invalid status value'
     }),
+
+  propertyId: Joi.string().uuid(),
+  propertyTitle: Joi.string().max(255).allow('', null),
+  propertyPrice: Joi.number().allow(null),
+  propertyLocation: Joi.string().max(255).allow('', null),
   
   notes: Joi.array()
     .items(Joi.object({
-      text: Joi.string().required(),
-      timestamp: Joi.date().iso()
+      id: Joi.string().required(),
+      agentId: Joi.string().required(),
+      agentName: Joi.string().required(),
+      note: Joi.string().min(1).max(5000).required(),
+      createdAt: Joi.date().iso().required()
     })),
   
-  lastFollowUpAt: Joi.date().iso(),
-  nextFollowUpAt: Joi.date().iso()
+  lastFollowUpAt: Joi.date().iso().allow(null),
+  nextFollowUpAt: Joi.date().iso().allow(null)
+});
+
+const inquiryAssignmentSchema = Joi.object({
+  agentId: Joi.string()
+    .uuid()
+    .required()
+    .messages({
+      'string.uuid': 'Invalid agent ID format',
+      'any.required': 'Agent ID is required'
+    }),
+  agentName: Joi.string().max(255).allow('', null)
 });
 
 // ============================================================
@@ -383,9 +611,43 @@ const paginationSchema = Joi.object({
   limit: Joi.number()
     .integer()
     .min(1)
-    .max(100)
+    .max(1000)
     .default(20)
 });
+
+const uuidParamSchema = Joi.object({
+  id: Joi.string()
+    .uuid()
+    .required()
+    .messages({
+      'string.uuid': 'Invalid ID format',
+      'any.required': 'ID is required'
+    })
+});
+
+const validateParams = (schema) => {
+  return (req, res, next) => {
+    const { error, value } = schema.validate(req.params, {
+      abortEarly: false,
+      stripUnknown: true
+    });
+
+    if (error) {
+      const errors = error.details.map(detail => ({
+        field: detail.path.join('.'),
+        message: detail.message
+      }));
+
+      return res.status(400).json({
+        error: 'Invalid route parameters',
+        details: errors
+      });
+    }
+
+    req.params = value;
+    next();
+  };
+};
 
 // ============================================================
 // EXPORTS
@@ -394,14 +656,18 @@ const paginationSchema = Joi.object({
 module.exports = {
   // Schemas
   propertySchema,
+  propertyDraftSchema,
   propertyUpdateSchema,
   inquirySchema,
   inquiryUpdateSchema,
+  inquiryAssignmentSchema,
   agentSchema,
   calendarEventSchema,
   paginationSchema,
+  uuidParamSchema,
   
   // Middleware
   validate,
-  validateQuery
+  validateQuery,
+  validateParams
 };

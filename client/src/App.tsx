@@ -1,11 +1,17 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import CustomerPortal from './pages/CustomerPortal';
+import CustomerAppointments from './pages/CustomerAppointments';
+import CustomerProfile from './pages/CustomerProfile';
+import CustomerFavorites from './pages/CustomerFavorites';
+import CustomerPreferences from './pages/CustomerPreferences';
+import CustomerNotifications from './pages/CustomerNotifications';
 import LoginPage from './pages/LoginPage';
 import AdminPortal from './pages/AdminPortal';
 import AgentPortal from './pages/AgentPortal';
 import SuperAdminPortal from './pages/SuperAdminPortal';
 import DatabasePortal from './pages/DatabasePortal';
 import ProtectedRoute from './components/shared/ProtectedRoute';
+import CustomerProtectedRoute from './components/shared/CustomerProtectedRoute';
 
 function App() {
   return (
@@ -16,7 +22,49 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login/:role" element={<LoginPage />} />
 
-        {/* Protected Routes */}
+        {/* Customer Protected Routes */}
+        <Route
+          path="/appointments"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerAppointments />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerProfile />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/favorites"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerFavorites />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/preferences"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerPreferences />
+            </CustomerProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <CustomerProtectedRoute>
+              <CustomerNotifications />
+            </CustomerProtectedRoute>
+          }
+        />
+
+        {/* Admin/Agent Protected Routes */}
         <Route
           path="/admin/*"
           element={

@@ -7,18 +7,31 @@
     "server": "cd server && node index.js",
     "server:dev": "cd server && nodemon index.js",
     "client": "cd client && npm run dev",
+    "test": "jest --runInBand --detectOpenHandles --forceExit",
+    "test:auth": "jest --runInBand --detectOpenHandles --forceExit server/routes/__tests__/auth.test.js",
     "start": "node server/index.js",
     "install:all": "npm install && cd client && npm install",
     "db:schema": "node scripts/createSchema.js",
-    "db:seed": "node scripts/seedDatabase.js"
+    "db:seed": "node scripts/seedDatabase.js",
+    "db:seed:demo": "node scripts/seedDemoShowcaseData.js",
+    "db:migrate:features": "node scripts/applyFeatureExpansion.js",
+    "db:migrate:security": "node scripts/applySecurityHardening.js",
+    "qa:demo": "node scripts/runDemoQA.js",
+    "demo:scan": "node scripts/cleanupDemoInterference.js",
+    "demo:cleanup": "node scripts/cleanupDemoInterference.js --apply",
+    "demo:ready": "npm run demo:cleanup && npm run demo:scan",
+    "agents:check-licenses": "node server/scripts/checkAgentLicenseStatus.js",
+    "calendar:backfill-inquiry-id": "node server/scripts/backfill-calendar-inquiry-id.js"
   },
   "dependencies": {
+    "@vonage/server-sdk": "^3.26.4",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-rate-limit": "^6.7.0",
     "helmet": "^7.0.0",
+    "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.0",
     "multer": "^2.0.2",
     "mysql2": "^3.6.0",
@@ -26,6 +39,8 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "nodemon": "^3.0.1"
+    "jest": "^30.2.0",
+    "nodemon": "^3.0.1",
+    "supertest": "^7.1.4"
   }
 }

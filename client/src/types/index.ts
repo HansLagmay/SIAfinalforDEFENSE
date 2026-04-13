@@ -5,6 +5,7 @@ export interface User {
   role: 'admin' | 'agent' | 'superadmin';
   name: string;
   phone?: string;
+  specialization?: string;
   createdAt: string;
   employmentData?: EmploymentData;
 }
@@ -38,9 +39,10 @@ export interface Property {
   imageUrl: string;
   images?: string[];
   createdBy?: string;
+  createdByUserId?: string;
   
   // Status History
-  statusHistory: PropertyStatusHistory[];
+  statusHistory?: PropertyStatusHistory[];
   
   // Sale information
   soldBy?: string;
@@ -63,9 +65,14 @@ export interface Property {
   reservedUntil?: string;
   
   // View tracking
-  viewCount: number;
+  viewCount?: number;
   lastViewedAt?: string;
-  viewHistory: PropertyViewHistory[];
+  viewHistory?: PropertyViewHistory[];
+  
+  // Customer visibility control
+  visibleToCustomers?: boolean;
+  documentCount?: number;
+  hasVerifiedDocuments?: boolean;
   
   // Timestamps
   createdAt: string;
@@ -140,7 +147,7 @@ export interface CalendarEvent {
   end: string;
   agentId: string;
   inquiryId?: string;
-  type: 'viewing' | 'meeting' | 'other';
+  type: 'viewing' | 'viewing-completed' | 'viewing-cancelled' | 'meeting' | 'other';
   createdAt: string;
   updatedAt?: string;
 }
@@ -172,6 +179,12 @@ export interface NewAgent {
   password: string;
   name: string;
   phone: string;
+  specialization?: string;
+  licenseNumber?: string;
+  licenseType?: string;
+  licenseIssuedDate?: string;
+  licenseExpiryDate?: string;
+  brokerId?: string;
   employmentData: EmploymentData;
   createdBy?: string;
 }

@@ -8,7 +8,7 @@ export interface ConfirmDialogProps {
   cancelText?: string;
   onConfirm: () => void;
   onCancel: () => void;
-  variant?: 'danger' | 'warning' | 'info';
+  variant?: 'danger' | 'warning' | 'info' | 'primary';
 }
 
 const ConfirmDialog = ({
@@ -44,13 +44,15 @@ const ConfirmDialog = ({
   const variantStyles = {
     danger: 'bg-red-600 hover:bg-red-700 focus:ring-red-500',
     warning: 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500',
-    info: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+    info: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
+    primary: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'
   };
 
   const iconColors = {
     danger: 'text-red-600',
     warning: 'text-yellow-600',
-    info: 'text-blue-600'
+    info: 'text-blue-600',
+    primary: 'text-indigo-600'
   };
 
   return (
@@ -81,6 +83,11 @@ const ConfirmDialog = ({
               {variant === 'info' && (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              {variant === 'primary' && (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               )}
             </div>

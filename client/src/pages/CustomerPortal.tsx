@@ -4,7 +4,7 @@ import PropertyDetailModal from '../components/customer/PropertyDetailModal';
 import InquiryModal from '../components/customer/InquiryModal';
 import CustomerNavbar from '../components/customer/CustomerNavbar';
 import type { Property } from '../types';
-import { propertiesAPI } from '../services/api';
+import { customerFeaturesAPI, propertiesAPI } from '../services/api';
 
 const CustomerPortal = () => {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -12,16 +12,47 @@ const CustomerPortal = () => {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [showInquiryModal, setShowInquiryModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('');
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [typeDropdown, setTypeDropdown] = useState('');
+  const [city, setCity] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [budgetRange, setBudgetRange] = useState('');
+  const [bedrooms, setBedrooms] = useState('');
+  const [bathrooms, setBathrooms] = useState('');
+  const [minArea, setMinArea] = useState('');
+  const [sortBy, setSortBy] = useState<'newest' | 'price-asc' | 'price-desc' | 'area-desc'>('newest');
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [recommendedProperties, setRecommendedProperties] = useState<Property[]>([]);
 
   useEffect(() => {
     loadProperties();
   }, []);
 
+  useEffect(() => {
+    loadFavorites();
+    loadRecommendations();
+  }, []);
+
+  const normalizeType = (value?: string) => {
+    const normalized = (value || '').trim().toLowerCase();
+    if (normalized === 'condominium') return 'condo';
+    return normalized;
+  };
+
+  const typeOptions = Array.from(
+    new Set(
+      properties
+        .map((property) => (property.type || '').trim())
+        .filter(Boolean)
+    )
+  ).sort((a, b) => a.localeCompare(b));
+
   const loadProperties = async () => {
     try {
-      const response = await propertiesAPI.getAll();
-      setProperties(response.data || []);
+      const response = await propertiesAPI.getAllPaginated(1, 1000);
+      const rows = response.data?.data || [];
+      setProperties(rows);
     } catch (error) {
       console.error('Failed to load properties:', error);
       setProperties([]);
@@ -30,15 +61,138 @@ const CustomerPortal = () => {
     }
   };
 
-  const filteredProperties = properties.filter(property => {
-    const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = !filterType || property.type === filterType;
-    // Only show available and reserved properties to customers
-    // Hide sold, withdrawn, off-market, under-contract, and draft properties
-    const isAvailableToView = ['available', 'reserved'].includes(property.status);
-    return matchesSearch && matchesType && isAvailableToView;
-  });
+  const loadFavorites = async () => {
+    const token = localStorage.getItem('customer_token');
+    if (!token) {
+      setFavoriteIds([]);
+      return;
+    }
+
+    try {
+      const response = await customerFeaturesAPI.getFavorites(token);
+      setFavoriteIds((response.data?.data || []).map((p: Property) => p.id));
+    } catch (error) {
+      console.error('Failed to load favorites:', error);
+    }
+  };
+
+  const toggleType = (type: string) => {
+    setSelectedTypes((prev) => prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]);
+  };
+
+  const clearFilters = () => {
+    setSelectedTypes([]);
+    setTypeDropdown('');
+    setCity('');
+    setMinPrice('');
+    setMaxPrice('');
+    setBudgetRange('');
+    setBedrooms('');
+    setBathrooms('');
+    setMinArea('');
+    setSortBy('newest');
+    setSearchTerm('');
+  };
+
+  const handleToggleFavorite = async (property: Property) => {
+    const token = localStorage.getItem('customer_token');
+    if (!token) {
+      alert('Please login first to use favorites.');
+      return;
+    }
+
+    try {
+      if (favoriteIds.includes(property.id)) {
+        await customerFeaturesAPI.removeFavorite(token, property.id);
+        setFavoriteIds((prev) => prev.filter((id) => id !== property.id));
+      } else {
+        await customerFeaturesAPI.addFavorite(token, property.id);
+        setFavoriteIds((prev) => [...prev, property.id]);
+      }
+    } catch (error) {
+      console.error('Failed to update favorite:', error);
+      alert('Failed to update favorites');
+    }
+  };
+
+  const loadRecommendations = async () => {
+    const token = localStorage.getItem('customer_token');
+    if (!token) {
+      setRecommendedProperties([]);
+      return;
+    }
+
+    try {
+      const [prefsRes, propertiesRes] = await Promise.all([
+        customerFeaturesAPI.getPreferences(token),
+        propertiesAPI.getAllPaginated(1, 1000)
+      ]);
+
+      const prefs = prefsRes.data || {};
+      const all = propertiesRes.data?.data || [];
+
+      const locations = Array.isArray(prefs.preferredLocations) ? prefs.preferredLocations : [];
+      const types = Array.isArray(prefs.propertyTypes) ? prefs.propertyTypes : [];
+      const minPrefPrice = prefs.minPrice ? Number(prefs.minPrice) : null;
+      const maxPrefPrice = prefs.maxPrice ? Number(prefs.maxPrice) : null;
+      const minPrefArea = prefs.minArea ? Number(prefs.minArea) : null;
+      const maxPrefArea = prefs.maxArea ? Number(prefs.maxArea) : null;
+
+      const matches = all.filter((p: Property) => {
+        const locationPass = locations.length === 0 || locations.some((loc: string) => (p.location || '').toLowerCase().includes(String(loc).toLowerCase()));
+        const typePass = types.length === 0 || types.some((type: string) => normalizeType(type) === normalizeType(p.type));
+        const minPricePass = minPrefPrice === null || Number(p.price || 0) >= minPrefPrice;
+        const maxPricePass = maxPrefPrice === null || Number(p.price || 0) <= maxPrefPrice;
+        const minAreaPass = minPrefArea === null || Number(p.area || 0) >= minPrefArea;
+        const maxAreaPass = maxPrefArea === null || Number(p.area || 0) <= maxPrefArea;
+
+        return locationPass && typePass && minPricePass && maxPricePass && minAreaPass && maxAreaPass;
+      });
+
+      setRecommendedProperties(matches.slice(0, 6));
+    } catch (error) {
+      console.error('Failed to load recommendations:', error);
+      setRecommendedProperties([]);
+    }
+  };
+
+  const filteredProperties = [...properties]
+    .filter((property) => {
+      const title = (property.title || '').toLowerCase();
+      const location = (property.location || '').toLowerCase();
+      const type = (property.type || '').toLowerCase();
+      const featureText = Array.isArray(property.features) ? property.features.join(' ').toLowerCase() : '';
+      const normalizedType = normalizeType(property.type);
+      const normalizedStatus = (property.status || '').trim().toLowerCase();
+      const query = searchTerm.trim().toLowerCase();
+
+      // Customer-facing status guard.
+      const isAvailableToView = ['available', 'for-sale', 'for sale'].includes(normalizedStatus);
+      if (!isAvailableToView) return false;
+
+      const matchesSearch = !query || title.includes(query) || location.includes(query) || type.includes(query) || featureText.includes(query);
+      const matchesTypePills = selectedTypes.length === 0 || selectedTypes.some((t) => normalizedType === normalizeType(t));
+      const matchesTypeDropdown = !typeDropdown || normalizedType === normalizeType(typeDropdown);
+      const matchesCity = !city || location.includes(city.toLowerCase());
+      const matchesMinPrice = !minPrice || Number(property.price || 0) >= Number(minPrice);
+      const matchesMaxPrice = !maxPrice || Number(property.price || 0) <= Number(maxPrice);
+      const matchesBed = !bedrooms || (Number(bedrooms) >= 5 ? Number(property.bedrooms || 0) >= 5 : Number(property.bedrooms || 0) === Number(bedrooms));
+      const matchesBath = !bathrooms || (Number(bathrooms) >= 5 ? Number(property.bathrooms || 0) >= 5 : Number(property.bathrooms || 0) === Number(bathrooms));
+      const matchesMinArea = !minArea || Number(property.area || 0) >= Number(minArea);
+
+      let matchesBudgetRange = true;
+      if (budgetRange === 'starter') matchesBudgetRange = Number(property.price || 0) <= 3000000;
+      if (budgetRange === 'mid') matchesBudgetRange = Number(property.price || 0) > 3000000 && Number(property.price || 0) <= 8000000;
+      if (budgetRange === 'premium') matchesBudgetRange = Number(property.price || 0) > 8000000;
+
+      return matchesSearch && matchesTypePills && matchesTypeDropdown && matchesCity && matchesMinPrice && matchesMaxPrice && matchesBed && matchesBath && matchesMinArea && matchesBudgetRange;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'price-asc') return Number(a.price || 0) - Number(b.price || 0);
+      if (sortBy === 'price-desc') return Number(b.price || 0) - Number(a.price || 0);
+      if (sortBy === 'area-desc') return Number(b.area || 0) - Number(a.area || 0);
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -54,25 +208,69 @@ const CustomerPortal = () => {
           </p>
         </div>
 
-        <div className="mb-8 flex flex-col md:flex-row gap-4">
+        <div className="mb-4 flex items-center justify-between">
+          <p className="text-sm text-gray-600">{filteredProperties.length} properties found</p>
+          <button onClick={clearFilters} className="text-sm text-blue-600 hover:text-blue-700 font-semibold">Clear All Filters</button>
+        </div>
+
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <input
             type="text"
-            placeholder="Search by title or location..."
+            placeholder="Search by title, location, type, or features..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">All Types</option>
-            <option value="House">House</option>
-            <option value="Condominium">Condominium</option>
-            <option value="Villa">Villa</option>
-            <option value="Apartment">Apartment</option>
+          />
+          <select value={typeDropdown} onChange={(e) => setTypeDropdown(e.target.value)} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">All Property Types</option>
+            {typeOptions.map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
           </select>
+          <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+          <input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} placeholder="Min Price" type="number" className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+          <input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} placeholder="Max Price" type="number" className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+          <select value={budgetRange} onChange={(e) => setBudgetRange(e.target.value)} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">Any Budget</option>
+            <option value="starter">Starter (Up to P3M)</option>
+            <option value="mid">Mid-range (P3M - P8M)</option>
+            <option value="premium">Premium (Above P8M)</option>
+          </select>
+          <select value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">Bedrooms</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5+</option>
+          </select>
+          <select value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">Bathrooms</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5+</option>
+          </select>
+          <input value={minArea} onChange={(e) => setMinArea(e.target.value)} placeholder="Min Area (sqm)" type="number" className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as 'newest' | 'price-asc' | 'price-desc' | 'area-desc')} className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="newest">Sort: Newest</option>
+            <option value="price-asc">Sort: Price Low to High</option>
+            <option value="price-desc">Sort: Price High to Low</option>
+            <option value="area-desc">Sort: Largest Area</option>
+          </select>
+          <div className="lg:col-span-4 flex flex-wrap gap-2">
+            {typeOptions.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => toggleType(type)}
+                className={`px-3 py-1 rounded-full border text-sm ${selectedTypes.includes(type) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'}`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
         </div>
 
         <section id="how-to-inquire" className="py-16 bg-blue-50">
@@ -116,8 +314,25 @@ const CustomerPortal = () => {
           </div>
         ) : (
           <section id="properties">
+            {recommendedProperties.length > 0 && (
+              <div className="mb-10">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Recommended for You</h2>
+                <PropertyList
+                  properties={recommendedProperties}
+                  favoriteIds={favoriteIds}
+                  onToggleFavorite={handleToggleFavorite}
+                  onViewDetails={(property) => setSelectedProperty(property)}
+                  onInquire={(property) => {
+                    setSelectedProperty(property);
+                    setShowInquiryModal(true);
+                  }}
+                />
+              </div>
+            )}
             <PropertyList
               properties={filteredProperties}
+              favoriteIds={favoriteIds}
+              onToggleFavorite={handleToggleFavorite}
               onViewDetails={(property) => setSelectedProperty(property)}
               onInquire={(property) => {
                 setSelectedProperty(property);
@@ -217,7 +432,7 @@ const CustomerPortal = () => {
             <div className="max-w-4xl mx-auto space-y-4">
               <div className="border rounded-lg p-4">
                 <div className="font-semibold mb-2">Do I need to create an account to inquire?</div>
-                <div className="text-gray-700">No. The customer portal is public. You can submit an inquiry without logging in.</div>
+                <div className="text-gray-700">Yes. You need a customer account so your inquiry and appointments can be tracked in your dashboard.</div>
               </div>
               <div className="border rounded-lg p-4">
                 <div className="font-semibold mb-2">How long before an agent contacts me?</div>
@@ -276,11 +491,11 @@ const CustomerPortal = () => {
           </div>
         </section>
       
-        <section id="contact" className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">📍 Contact Us</h2>
-            <div className="grid md:grid-cols-2 gap-12">
-              <div>
+        <section id="contact" className="py-12 md:py-14 bg-gray-50">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <h2 className="text-3xl font-bold text-center mb-10">📍 Contact Us</h2>
+            <div className="grid md:grid-cols-2 gap-8 items-stretch">
+              <div className="bg-white rounded-xl border border-gray-200 p-6 md:p-7 shadow-sm">
                 <h3 className="text-2xl font-semibold mb-6">Get in Touch</h3>
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
@@ -320,7 +535,7 @@ const CustomerPortal = () => {
                   </div>
                 </div>
               </div>
-              <div>
+              <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-5 shadow-sm">
                 <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
                   <p className="text-gray-500">🗺️ Google Maps Embed Here</p>
                 </div>
@@ -329,39 +544,46 @@ const CustomerPortal = () => {
           </div>
         </section>
       
-        <footer className="bg-gray-800 text-white py-12">
-          <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-4 gap-8">
+        <footer className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen bg-slate-900 text-slate-200 border-t border-slate-700/60">
+          <div className="container mx-auto px-4 py-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div>
-                <h4 className="text-lg font-bold mb-4">TES Property</h4>
-                <p className="text-gray-400 text-sm">Your trusted partner in finding the perfect property.</p>
+                <h4 className="text-xl font-bold text-white mb-3">TES Property</h4>
+                <p className="text-slate-400 text-sm leading-relaxed">Helping Filipino families and investors find the right property with transparent and reliable service.</p>
               </div>
               <div>
-                <h4 className="text-lg font-bold mb-4">Quick Links</h4>
+                <h4 className="text-sm font-semibold tracking-wide uppercase text-slate-300 mb-3">Quick Links</h4>
                 <ul className="space-y-2 text-sm">
-                  <li><a href="#properties" className="text-gray-400 hover:text-white">Properties</a></li>
-                  <li><a href="#about" className="text-gray-400 hover:text-white">About Us</a></li>
-                  <li><a href="#contact" className="text-gray-400 hover:text-white">Contact</a></li>
+                  <li><a href="#properties" className="text-slate-400 hover:text-white transition">Properties</a></li>
+                  <li><a href="#services" className="text-slate-400 hover:text-white transition">Services</a></li>
+                  <li><a href="#about" className="text-slate-400 hover:text-white transition">About Us</a></li>
+                  <li><a href="#contact" className="text-slate-400 hover:text-white transition">Contact</a></li>
                 </ul>
               </div>
               <div>
-                <h4 className="text-lg font-bold mb-4">Legal</h4>
-                <ul className="space-y-2 text-sm">
-                  <li><a href="/privacy" className="text-gray-400 hover:text-white">Privacy Policy</a></li>
-                  <li><a href="/terms" className="text-gray-400 hover:text-white">Terms of Service</a></li>
+                <h4 className="text-sm font-semibold tracking-wide uppercase text-slate-300 mb-3">Contact</h4>
+                <ul className="space-y-2 text-sm text-slate-400">
+                  <li>(02) 8123-4567</li>
+                  <li>+63 917 123 4567</li>
+                  <li>info@tesproperty.com</li>
+                  <li>Makati City, Metro Manila</li>
                 </ul>
               </div>
               <div>
-                <h4 className="text-lg font-bold mb-4">Follow Us</h4>
-                <div className="flex space-x-4">
-                  <a href="#" className="text-gray-400 hover:text-white">Facebook</a>
-                  <a href="#" className="text-gray-400 hover:text-white">Twitter</a>
-                  <a href="#" className="text-gray-400 hover:text-white">Instagram</a>
+                <h4 className="text-sm font-semibold tracking-wide uppercase text-slate-300 mb-3">Follow Us</h4>
+                <div className="flex flex-wrap gap-3 text-sm">
+                  <a href="#" className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition">Facebook</a>
+                  <a href="#" className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition">Twitter</a>
+                  <a href="#" className="px-3 py-1 rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition">Instagram</a>
                 </div>
               </div>
             </div>
-            <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400 text-sm">
-              © 2026 TES Property System. All rights reserved.
+            <div className="mt-10 pt-6 border-t border-slate-700/70 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+              <p>© 2026 TES Property System. All rights reserved.</p>
+              <div className="flex gap-4">
+                <a href="/privacy" className="hover:text-white transition">Privacy Policy</a>
+                <a href="/terms" className="hover:text-white transition">Terms of Service</a>
+              </div>
             </div>
           </div>
         </footer>

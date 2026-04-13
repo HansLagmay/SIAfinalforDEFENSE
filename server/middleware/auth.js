@@ -31,6 +31,22 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+const authenticateTokenOptional = (req, _res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return next();
+  }
+
+  jwt.verify(token, EFFECTIVE_SECRET, (err, user) => {
+    if (!err) {
+      req.user = user;
+    }
+    next();
+  });
+};
+
 const requireRole = (roles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -53,4 +69,4 @@ const generateToken = (user) => {
   return jwt.sign(payload, EFFECTIVE_SECRET, { expiresIn: EXPIRES_IN });
 };
 
-module.exports = { authenticateToken, requireRole, generateToken };
+module.exports = { authenticateToken, authenticateTokenOptional, requireRole, generateToken };

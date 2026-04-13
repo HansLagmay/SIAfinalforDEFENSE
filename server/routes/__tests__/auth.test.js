@@ -15,6 +15,7 @@
 const request = require('supertest');
 const express = require('express');
 const authRouter = require('../auth');
+const pool = require('../../db');
 
 // Create a test app instance
 const app = express();
@@ -122,6 +123,10 @@ describe('POST /api/login', () => {
       // expect(rateLimited).toBe(true);
     });
   });
+});
+
+afterAll(async () => {
+  await pool.end();
 });
 
 /**
