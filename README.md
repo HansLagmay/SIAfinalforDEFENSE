@@ -1,45 +1,18 @@
-# 🏢 TES Property Management System
+# � TES Property Management System v2.0 - Real Estate Inquiry Management
 
-**Complete Fullstack Real Estate Management Platform**  
-React + TypeScript Frontend | Express.js + MySQL Backend
+A complete professional real estate management system with **React + Express** architecture, using **MySQL 8.0+** database with comprehensive security features.
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
-![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-green.svg)
-![MySQL](https://img.shields.io/badge/mysql-8.0%2B-orange.svg)
+## 🎯 Project Overview
 
----
+**Enterprise-grade property management platform** designed for real estate agencies and property management companies. This system provides separate portals for **Administrators**, **Agents**, and **Customers** with specialized workflows and security controls.
 
-## 📋 Table of Contents
-
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [Tech Stack](#-tech-stack)
-- [Quick Start](#-quick-start)
-- [Project Structure](#-project-structure)
-- [Database Setup](#-database-setup)
-- [API Documentation](#-api-documentation)
-- [User Roles & Workflows](#-user-roles--workflows)
-- [Security Features](#-security-features)
-- [Scripts & Commands](#-scripts--commands)
-- [Environment Configuration](#-environment-configuration)
-- [Troubleshooting](#-troubleshooting)
-
----
-
-## 🎯 Overview
-
-TES Property Management System is a comprehensive real estate platform designed for property management companies. It provides separate portals for **Administrators**, **Agents**, and **Customers** with specialized workflows for each user type.
-
-### What's New in v2.0
-
-- ✅ **Customer Authentication System** - Secure login/signup for customers
-- ✅ **Customer Portal** - Browse properties, submit authenticated inquiries, view appointments
-- ✅ **Enhanced Calendar Management** - Agents can mark viewings as done, reschedule, or cancel
-- ✅ **Smart Inquiry Workflow** - Automatic status transitions (new → claimed → assigned)
-- ✅ **One Inquiry Per Property** - Customers can only submit one active inquiry per property
-- ✅ **Viewing Outcome Tracking** - Track if customers were interested or not after viewings
-- ✅ **Activity Logging** - Complete audit trail of all system actions
-- ✅ **Database Migrations** - Schema versioning and safe updates
+Key Highlights:
+- ✅ **Customer Portal** - Browse properties, submit inquiries, track appointments
+- ✅ **Agent Portal** - Manage inquiries, schedule viewings, track metrics
+- ✅ **Admin Dashboard** - Full property & user management with reporting
+- ✅ **Enterprise Security** - JWT auth, bcrypt hashing, rate limiting, XSS protection
+- ✅ **MySQL Database** - Persistent data storage with 10+ tables and indexes
+- ✅ **Activity Logging** - Complete audit trail for compliance
 
 ---
 
