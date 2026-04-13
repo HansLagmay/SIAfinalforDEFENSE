@@ -1,1140 +1,660 @@
-# � TES Property Management System v2.0 - Real Estate Inquiry Management
+# 🏠 TES Property Management System v2.0 - Real Estate Inquiry Management
 
-A complete professional real estate management system with **React + Express** architecture, using **MySQL 8.0+** database with comprehensive security features.
+A complete professional real estate management system with **React + Express** architecture, using **MySQL 8.0+** database with comprehensive security features and enterprise-grade functionality.
 
 ## 🎯 Project Overview
 
-**Enterprise-grade property management platform** designed for real estate agencies and property management companies. This system provides separate portals for **Administrators**, **Agents**, and **Customers** with specialized workflows and security controls.
+**Enterprise-grade property management platform** designed for real estate agencies, property management companies, and real estate brokers. This system provides separate portals for **Administrators**, **Agents**, and **Customers** with specialized workflows and security controls.
 
-Key Highlights:
-- ✅ **Customer Portal** - Browse properties, submit inquiries, track appointments
-- ✅ **Agent Portal** - Manage inquiries, schedule viewings, track metrics
-- ✅ **Admin Dashboard** - Full property & user management with reporting
-- ✅ **Enterprise Security** - JWT auth, bcrypt hashing, rate limiting, XSS protection
-- ✅ **MySQL Database** - Persistent data storage with 10+ tables and indexes
-- ✅ **Activity Logging** - Complete audit trail for compliance
+Your application is production-ready with:
+- 🏢 Property Management - Create, list, manage listings with validation
+- 📋 Inquiry System - Customer inquiries with agent assignment and tracking
+- 📅 Calendar & Scheduling - Schedule property viewings with status tracking
+- 👥 Multi-Role System - Admin, Agent, and Customer portals with role-based access
+- 🔒 Enterprise Security - JWT auth, bcrypt hashing, input sanitization, rate limiting
+- 📊 Agent Performance - Track metrics, conversion rates, and sales
+- 🗄️ MySQL Database - Persistent storage with 10+ tables and automated backups
 
 ---
 
 ## ✨ Key Features
 
 ### 🎨 Customer Portal
-- **Public Property Browsing** - View available properties with image galleries
-- **Secure Authentication** - JWT-based login/signup system (30-day sessions)
-- **Property Inquiries** - Submit authenticated inquiries with automatic ticket generation
-- **Appointment Tracking** - View scheduled property viewings
-- **Inquiry Management** - Check status of submitted inquiries
-- **Duplicate Prevention** - One active inquiry per property until resolved
+- 🌐 **Public Property Browsing** - Browse all available properties without login
+- 🔐 **Secure Authentication** - JWT-based login/signup system (30-day sessions)
+- 📝 **Property Inquiries** - Submit authenticated inquiries with automatic ticket generation
+- 📅 **Appointment Tracking** - View and manage scheduled property viewings
+- 📊 **Inquiry Status** - Track inquiry progress in real-time
+- ✅ **Duplicate Prevention** - One active inquiry per property safeguard
 
 ### 👨‍💼 Agent Portal
-- **Inquiry Management** - View available tickets, claim and manage assignments
-- **Calendar Integration** - Schedule viewings, mark as done, reschedule, cancel
-- **Property Listings** - Create draft properties for admin approval
-- **Commission Tracking** - View sales and commission details
-- **Dashboard Analytics** - Track active inquiries and performance metrics
+- 📋 **Inquiry Dashboard** - View available tickets and claimed assignments
+- 🔄 **Inquiry Management** - Claim inquiries and manage status transitions
+- 📅 **Calendar Integration** - Schedule viewings, reschedule, or cancel
+- 🏠 **Property Listings** - Access available properties for showing
+- 📊 **Performance Tracking** - View conversion rates and sales metrics
+- 📱 **Notifications** - Receive updates on inquiry assignments
 
 ### 🔧 Admin Portal
-- **Full Property Management** - CRUD operations, status tracking, multi-image uploads
-- **User Management** - Create/manage agent accounts
-- **Inquiry Assignment** - Assign inquiries to agents manually
-- **Activity Monitoring** - View system-wide audit logs
-- **Database Utilities** - Direct database inspection and management
-- **Report Generation** - Export data for analysis
+- 🏠 **Property CRUD** - Create, edit, delete properties with multi-image upload
+- 👥 **User Management** - Create and manage agent accounts with roles
+- 📋 **Inquiry Assignment** - Assign inquiries to specific agents
+- 📊 **Activity Logs** - View system-wide audit trail and user actions
+- 📈 **Reports** - Generate sales and performance reports
+- 🗄️ **Database Management** - Inspect and export database data
 
-### 🗄️ Database Portal (Super Admin)
-- **Raw Data Access** - View all database tables
-- **File Metadata** - Inspect database structure
-- **Data Export** - Download database contents
+### 🗄️ Super Admin Portal
+- 💾 **Database Access** - Direct access to all database tables
+- 📁 **Data Export** - Export tables as JSON or CSV format
+- 🔍 **Table Inspection** - View database structure and metadata
+- 📊 **System Statistics** - Overall system health and usage metrics
 
 ---
 
-## 🛠 Tech Stack
+## 🛠️ Tech Stack
+
+### Frontend
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **React** | 18.3+ | UI library |
+| **TypeScript** | 5.9+ | Type-safe JavaScript |
+| **React Router** | 6.30+ | Client-side routing |
+| **Vite** | 5.4+ | Fast build tool |
+| **Tailwind CSS** | 3.3+ | Utility-first CSS |
+| **Axios** | 1.13+ | HTTP client |
+| **Lucide React** | Latest | Icon library |
 
 ### Backend
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | **Node.js** | 18+ | JavaScript runtime |
-| **Express.js** | 4.18+ | REST API framework |
+| **Express.js** | 4.22+ | REST API framework |
 | **MySQL** | 8.0+ | Relational database |
-| **mysql2** | 3.6+ | MySQL driver with promise support |
-| **jsonwebtoken** | 9.0+ | JWT authentication |
-| **bcryptjs** | 2.4+ | Password hashing |
-| **multer** | 2.0+ | File upload handling |
-| **helmet** | 7.0+ | Security headers |
-| **express-rate-limit** | 6.7+ | Rate limiting |
-| **cors** | 2.8+ | Cross-origin requests |
-| **uuid** | 9.0+ | Unique ID generation |
+| **mysql2** | 3.6+ | MySQL driver with promises |
+| **JWT** | 9.0+ | Authentication tokens |
+| **bcryptjs** | 2.4+ | Password hashing (10 rounds) |
+| **express-rate-limit** | 6.11+ | Rate limiting |
+| **Helmet** | 7.0+ | Security headers |
+| **Multer** | 2.0+ | File upload handling |
+| **Vonage SDK** | 3.26+ | SMS verification |
 | **dotenv** | 16.0+ | Environment variables |
 
-### Frontend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **React** | 18.2+ | UI framework |
-| **TypeScript** | 5.3+ | Type safety |
-| **Vite** | 5.0+ | Build tool & dev server |
-| **React Router** | 6.20+ | Client-side routing |
-| **Axios** | 1.6+ | HTTP client |
-| **Tailwind CSS** | 3.3+ | Utility-first styling |
-
-### Development Tools
+### Database
 | Technology | Purpose |
 |------------|---------|
-| **nodemon** | Auto-reload backend on changes |
-| **concurrently** | Run multiple processes |
+| **MySQL 8.0+** | Persistent relational data storage |
+| **Connection Pooling** | 10-20 concurrent connections |
+| **Automated Backups** | Scheduled backup system |
+
+---
+
+## 📦 Prerequisites
+
+- **Node.js** (v18.0.0 or higher)
+- **npm** v9+
+- **MySQL** 8.0+ (local or remote server)
+- **Git**
+- **VS Code** (recommended)
+
+**No external JSON files needed!** This system uses MySQL database for reliable data persistence.
 
 ---
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- **Node.js** v18.0.0 or higher
-- **npm** v9+
-- **MySQL** 8.0+ (running locally or remote)
-- **Git**
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd siaFINALwithbackend-database
-   ```
-
-2. **Install all dependencies**
-   ```bash
-   npm run install:all
-   ```
-   This installs dependencies for both backend and frontend.
-
-3. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` with your settings:
-   ```env
-   PORT=3000
-   CORS_ORIGIN=http://localhost:5173
-   
-   # MySQL connection
-   DB_HOST=localhost
-   DB_PORT=3306
-   DB_USER=root
-   DB_PASSWORD=your_mysql_password
-   DB_NAME=TESdb
-   
-   # JWT Secret (use strong random string)
-   JWT_SECRET=your_secure_jwt_secret_minimum_32_characters
-   JWT_EXPIRES_IN=30d
-   ```
-
-4. **Set up the database**
-   ```bash
-   npm run db:schema    # Creates all tables
-   npm run db:seed      # Inserts demo data
-   ```
-
-5. **Start the application**
-   ```bash
-   npm run dev
-   ```
-   
-   This starts both backend and frontend concurrently:
-   - 🌐 **Frontend**: http://localhost:5173
-   - 🔌 **Backend API**: http://localhost:3000/api
-   - ❤️ **Health Check**: http://localhost:3000/api/health
-
----
-
-## 📦 Project Structure
-
-```
-siaFINALwithbackend-database/
-│
-├── client/                          # React + TypeScript Frontend
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── admin/              # Admin portal components
-│   │   │   ├── agent/              # Agent portal components
-│   │   │   ├── customer/           # Customer portal components
-│   │   │   ├── database/           # Database portal components
-│   │   │   └── shared/             # Shared UI components
-│   │   ├── pages/
-│   │   │   ├── AdminPortal.tsx
-│   │   │   ├── AgentPortal.tsx
-│   │   │   ├── CustomerPortal.tsx
-│   │   │   ├── DatabasePortal.tsx
-│   │   │   └── LoginPage.tsx
-│   │   ├── services/
-│   │   │   └── api.ts              # Axios API client
-│   │   ├── types/                  # TypeScript type definitions
-│   │   ├── utils/                  # Helper functions
-│   │   ├── App.tsx                 # Root component
-│   │   └── main.tsx                # Entry point
-│   ├── index.html
-│   ├── package.json
-│   ├── tailwind.config.js
-│   ├── tsconfig.json
-│   └── vite.config.ts
-│
-├── server/                          # Express.js Backend
-│   ├── middleware/
-│   │   ├── auth.js                 # JWT authentication & RBAC
-│   │   ├── logger.js               # Activity logging
-│   │   ├── rateLimiter.js          # Rate limiting configs
-│   │   ├── sanitize.js             # Input sanitization
-│   │   ├── upload.js               # Multer configuration
-│   │   └── validators.js           # Input validation
-│   ├── routes/
-│   │   ├── activity-log.js         # Activity log endpoints
-│   │   ├── auth.js                 # Login endpoints
-│   │   ├── calendar.js             # Calendar/viewing management
-│   │   ├── database.js             # Database utilities
-│   │   ├── inquiries.js            # Inquiry management
-│   │   ├── properties.js           # Property CRUD
-│   │   └── users.js                # User management
-│   ├── scripts/
-│   │   └── migrate.js              # Database migrations
-│   ├── sql/
-│   │   ├── schema.sql              # Complete database schema
-│   │   ├── customer_auth_migration.sql
-│   │   └── migration_add_missing_columns.sql
-│   ├── uploads/
-│   │   └── properties/             # Uploaded property images
-│   ├── db.js                       # MySQL connection pool
-│   └── index.js                    # Express app entry point
-│
-├── scripts/
-│   ├── clearDemoData.js            # Reset database to clean state
-│   ├── createSchema.js             # Initialize database schema
-│   └── seedDatabase.js             # Populate with demo data
-│
-├── .env.example                     # Environment template
-├── .gitignore
-├── package.json                     # Root package.json
-└── README_COMPLETE.md              # This file
-```
-
----
-
-## 🗄 Database Setup
-
-### Database Schema
-
-The system uses **TESdb** MySQL database with the following tables:
-
-#### Core Tables
-
-**`users`** - Agent and admin accounts
-```sql
-- id (VARCHAR 36, PRIMARY KEY)
-- email (VARCHAR 255, UNIQUE)
-- password (VARCHAR 255, hashed)
-- name (VARCHAR 255)
-- role (VARCHAR 50: 'admin', 'agent', 'superadmin')
-- phone (VARCHAR 50)
-- created_at (DATETIME)
-```
-
-**`customers`** - Customer accounts (new in v2.0)
-```sql
-- id (VARCHAR 36, PRIMARY KEY)
-- email (VARCHAR 255, UNIQUE)
-- password_hash (VARCHAR 255)
-- name (VARCHAR 255)
-- phone (VARCHAR 50)
-- email_verified (BOOLEAN)
-- phone_verified (BOOLEAN)
-- verification_token (VARCHAR 255)
-- verification_token_expires (DATETIME)
-- created_at (DATETIME)
-- updated_at (DATETIME)
-```
-
-**`properties`** - Property listings
-```sql
-- id (VARCHAR 36, PRIMARY KEY)
-- title (VARCHAR 255)
-- type (VARCHAR 100)
-- price (DECIMAL 15,2)
-- location (VARCHAR 255)
-- bedrooms (INT)
-- bathrooms (INT)
-- area (DECIMAL 10,2)
-- description (TEXT)
-- status (VARCHAR 50)
-- image_url (VARCHAR 512)
-- features (JSON)
-- created_by (VARCHAR 255)
-- status_history (JSON)
-- view_count (INT)
-- view_history (JSON)
-- last_viewed_at (DATETIME)
-- sold_by (VARCHAR 255)
-- sold_by_agent_id (VARCHAR 36)
-- sold_at (DATETIME)
-- sale_price (DECIMAL 15,2)
-- commission (JSON)
-- reserved_by (VARCHAR 255)
-- reserved_at (DATETIME)
-- reserved_until (DATETIME)
-- created_at (DATETIME)
-- updated_at (DATETIME)
-```
-
-**`inquiries`** - Customer inquiries with ticket system
-```sql
-- id (VARCHAR 36, PRIMARY KEY)
-- customer_id (VARCHAR 36, FK to customers)
-- ticket_number (VARCHAR 50, UNIQUE)
-- name (VARCHAR 255)
-- email (VARCHAR 255)
-- phone (VARCHAR 50)
-- message (TEXT)
-- property_id (VARCHAR 36)
-- property_title (VARCHAR 255)
-- property_price (DECIMAL 15,2)
-- property_location (VARCHAR 255)
-- status (VARCHAR 50)
-- assigned_to (VARCHAR 36, FK to users)
-- claimed_by (VARCHAR 36, FK to users)
-- assigned_by (VARCHAR 36, FK to users)
-- claimed_at (DATETIME)
-- assigned_at (DATETIME)
-- created_at (DATETIME)
-- updated_at (DATETIME)
-```
-
-**`calendar_events`** - Viewing schedules
-```sql
-- id (VARCHAR 36, PRIMARY KEY)
-- title (VARCHAR 255)
-- description (TEXT)
-- type (VARCHAR 100: 'viewing', 'meeting')
-- start_time (DATETIME)
-- end_time (DATETIME)
-- agent_id (VARCHAR 36, FK to users)
-- inquiry_id (VARCHAR 36, FK to inquiries)
-- property_id (VARCHAR 36, FK to properties)
-- created_by (VARCHAR 255)
-- created_at (DATETIME)
-- updated_at (DATETIME)
-```
-
-**`activity_log`** - Audit trail
-```sql
-- id (VARCHAR 36, PRIMARY KEY)
-- action (VARCHAR 255)
-- description (TEXT)
-- performed_by (VARCHAR 255)
-- timestamp (DATETIME)
-```
-
-**`property_images`** - Multiple images per property
-```sql
-- id (VARCHAR 36, PRIMARY KEY)
-- property_id (VARCHAR 36, FK to properties)
-- image_url (VARCHAR 512)
-- is_primary (BOOLEAN)
-- created_at (DATETIME)
-```
-
-#### Views
-
-**`customer_appointments`** - Unified view of customer viewing appointments
-```sql
-VIEW: Joins calendar_events, inquiries, and users
-for easy customer appointment access
-```
-
-### Setup Commands
-
+### 1. Clone the Repository
 ```bash
-# Create all tables
-npm run db:schema
-
-# Populate with demo data
-npm run db:seed
-
-# Run migrations (safe to run multiple times)
-node server/scripts/migrate.js
-
-# Clear all demo data (keeps schema)
-node scripts/clearDemoData.js
+git clone https://github.com/HansLagmay/SIAfinalforDEFENSE.git
+cd SIAfinalforDEFENSE
 ```
 
----
-
-## 🔌 API Documentation
-
-All API endpoints are prefixed with `/api`.
-
-### Authentication
-
-**POST `/api/login`**  
-Login for admin, agent, or customer accounts.
-
-**Request:**
-```json
-{
-  "email": "user@example.com",
-  "password": "password123",
-  "role": "admin" | "agent" | "customer"
-}
-```
-
-**Response:**
-```json
-{
-  "token": "jwt.token.here",
-  "user": {
-    "id": "uuid",
-    "email": "user@example.com",
-    "name": "John Doe",
-    "role": "admin"
-  }
-}
-```
-
-**POST `/api/auth/customer/signup`**  
-Register new customer account.
-
-**POST `/api/auth/customer/login`**  
-Customer-specific login endpoint.
-
-### Properties
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/properties` | ❌ | List all properties (paginated) |
-| GET | `/api/properties/:id` | ❌ | Get single property |
-| POST | `/api/properties` | ✅ Admin | Create new property |
-| POST | `/api/properties/draft` | ✅ Agent | Create draft property |
-| POST | `/api/properties/upload` | ✅ Admin | Upload property images |
-| PUT | `/api/properties/:id` | ✅ Admin | Update property |
-| DELETE | `/api/properties/:id` | ✅ Admin | Delete property |
-
-### Users
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/users` | ✅ Admin | List all users |
-| GET | `/api/users/agents` | ✅ Admin/Agent | List all agents |
-| POST | `/api/users` | ✅ Admin | Create new user |
-| DELETE | `/api/users/:id` | ✅ Admin | Delete user |
-
-### Inquiries
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/inquiries` | ✅ Admin/Agent | List all inquiries |
-| GET | `/api/inquiries/:id` | ✅ Admin/Agent | Get single inquiry |
-| GET | `/api/inquiries/agents/workload` | ✅ Admin/Agent | Get agent workload stats |
-| POST | `/api/inquiries` | ✅ Customer | Submit new inquiry |
-| POST | `/api/inquiries/:id/claim` | ✅ Agent | Claim unassigned inquiry |
-| POST | `/api/inquiries/:id/assign` | ✅ Admin | Assign inquiry to agent |
-| PUT | `/api/inquiries/:id` | ✅ Admin/Agent | Update inquiry status |
-| DELETE | `/api/inquiries/:id` | ✅ Admin | Delete inquiry |
-
-### Calendar
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/calendar` | ✅ Admin/Agent | List calendar events |
-| GET | `/api/calendar/agent/:agentId` | ✅ Agent | Get agent's events |
-| POST | `/api/calendar` | ✅ Admin/Agent | Create new event |
-| POST | `/api/calendar/:id/mark-done` | ✅ Agent | Mark viewing as completed |
-| PUT | `/api/calendar/:id` | ✅ Admin/Agent | Update event |
-| DELETE | `/api/calendar/:id` | ✅ Admin/Agent | Cancel event |
-
-### Activity Log
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/activity-log` | ✅ Admin | View system activity log |
-
-### Database Utilities
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/database/overview` | ✅ Admin | Get database overview |
-| GET | `/api/database/file-metadata/:filename` | ✅ Admin | Get file metadata |
-| GET | `/api/database/file/:filename` | ✅ Admin | Get raw table data |
-
----
-
-## 👥 User Roles & Workflows
-
-### 🔵 Customer
-
-**Access:** Public + Customer Portal (after signup/login)
-
-**Capabilities:**
-- Browse all available properties
-- View property details and image galleries
-- Sign up for an account or login
-- Submit property inquiries (requires authentication)
-- View their submitted inquiries and status
-- View scheduled viewing appointments
-- Receive ticket numbers for inquiry tracking
-
-**Inquiry Workflow:**
-1. Browse properties as a guest
-2. Sign up or log in to submit inquiry
-3. Submit inquiry → Receives unique ticket number (e.g., INQ-2026-001)
-4. **Duplicate Prevention**: Can only have ONE active inquiry per property
-5. View inquiry status updates in Customer Portal
-6. See scheduled viewings in appointments section
-
-**Status Visibility:**
-- See inquiry status changes (new → claimed → contacted → viewing-scheduled)
-- View appointment details (date, time, agent name)
-- Cannot change inquiry status (read-only)
-
-### 🟢 Agent
-
-**Access:** Agent Portal (requires agent login)
-
-**Capabilities:**
-- View available inquiries (unassigned tickets)
-- Claim inquiries (first-come, first-served)
-- Manage assigned inquiries
-- Schedule property viewings
-- Manage calendar events
-- Mark viewings as done (interested/not interested)
-- Reschedule or cancel viewings
-- Create draft properties
-- View commission information
-- Access dashboard analytics
-
-**Inquiry Workflow:**
-1. View "Available Tickets" list (unassigned inquiries)
-2. Click "Claim This Ticket" → Status automatically changes to **claimed**
-3. Contact customer → Update status to **contacted**
-4. Schedule viewing → Status becomes **viewing-scheduled**
-5. Mark viewing as done → Status becomes **viewed-interested** or **viewed-not-interested**
-6. Continue negotiation or mark as terminal state
-
-**Calendar Management:**
-- Schedule viewings for claimed inquiries
-- See all scheduled events
-- **Mark as Done** → Prompts for outcome (interested/not interested)
-- **Reschedule** → Change date/time
-- **Cancel** → Remove from calendar with reason
-
-**Status Transitions (Agent-Controlled):**
-- **contacted** - Agent has reached out to customer
-- **in-progress** - Actively working on the inquiry
-- **viewing-scheduled** - Viewing appointment set
-- **negotiating** - In negotiation phase
-- **viewed-interested** - Customer interested after viewing
-- **viewed-not-interested** - Customer not interested
-- **deal-successful** - Sale completed ✓
-- **deal-cancelled** - Deal fell through ✗
-- **no-response** - Customer stopped responding
-
-### 🔴 Admin
-
-**Access:** Admin Portal (requires admin login)
-
-**Capabilities:**
-- **Full Property Management**: Create, edit, delete, upload images
-- **User Management**: Create/delete agent accounts
-- **Inquiry Assignment**: Manually assign inquiries to specific agents
-- **Status Override**: Can change any inquiry status EXCEPT:
-  - ❌ Cannot manually set to "claimed" (agent-only action)
-  - ❌ Status "claimed" removed from dropdown
-- **Activity Monitoring**: View complete audit log
-- **Database Access**: Inspect raw database tables
-- **Report Generation**: Export data for analysis
-
-**Admin Restrictions:**
-- **Cannot claim inquiries** - Only agents can claim
-- **Cannot interfere with claim workflow** - Respects agent autonomy
-- Can reassign already-assigned inquiries
-- Can change status but "claimed" is reserved for agent claims
-
-### 🟣 Super Admin
-
-**Access:** Database Portal
-
-**Capabilities:**
-- Direct database table access
-- View all raw data
-- Database metadata inspection
-- File system access
-
----
-
-## 🔒 Security Features
-
-### Authentication & Authorization
-
-- **JWT Tokens** - 30-day signed tokens with role-based claims
-- **Secure Password Storage** - bcryptjs hashing with 10 salt rounds
-- **Role-Based Access Control (RBAC)** - Middleware enforces route access
-- **Token Validation** - All protected routes verify `Authorization: Bearer <token>`
-
-### Security Middleware
-
-- **Helmet** - Sets security HTTP headers (XSS, CSP, X-Frame-Options)
-- **CORS** - Restricted to configured origins only
-- **Rate Limiting** - Prevents brute-force attacks
-  - Login: 5 attempts per 15 minutes
-  - Inquiries: 3 submissions per 15 minutes
-  - General API: 100 requests per 15 minutes
-- **Input Sanitization** - Strips/escapes dangerous characters
-- **SQL Injection Prevention** - Parameterized queries via mysql2
-
-### Data Protection
-
-- **Environment Variables** - Secrets never committed to repository
-- **Password Complexity** - Enforced on signup/creation
-- **Session Management** - JWT expiration and refresh
-- **HTTPS Ready** - Secure in production with reverse proxy
-
-### Production Security Checklist
-
-- ✅ Change all default passwords
-- ✅ Use strong JWT_SECRET (64+ characters)
-- ✅ Enable HTTPS (nginx/Apache reverse proxy)
-- ✅ Set NODE_ENV=production
-- ✅ Use dedicated MySQL user with minimal privileges
-- ✅ Regular database backups
-- ✅ Monitor activity logs for suspicious behavior
-- ✅ Keep dependencies updated
-- ✅ Disable database portal in production
-
----
-
-## 📜 Scripts & Commands
-
-### Root Package.json Scripts
-
+### 2. Install All Dependencies
 ```bash
-# Development
-npm run dev              # Start both backend & frontend concurrently
-npm run server           # Start backend only (production mode)
-npm run server:dev       # Start backend with nodemon (auto-reload)
-npm run client           # Start frontend only
-
-# Installation
-npm run install:all      # Install root + client dependencies
-
-# Database
-npm run db:schema        # Create database schema
-npm run db:seed          # Populate with demo data
-
-# Production
-npm start                # Start backend in production mode
+npm install
 ```
 
-### Database Scripts
+This installs dependencies for root, client, and server automatically.
 
-```bash
-# Create all tables (safe to run multiple times)
-npm run db:schema
+### 3. Set Up Environment Variables
 
-# Seed demo users and properties
-npm run db:seed
-
-# Run database migrations
-node server/scripts/migrate.js
-
-# Clear all demo data (keeps schema intact)
-node scripts/clearDemoData.js
-```
-
-### Frontend (client/) Scripts
-
-```bash
-cd client
-
-npm run dev              # Start Vite dev server (http://localhost:5173)
-npm run build            # Build for production (outputs to dist/)
-npm run preview          # Preview production build
-```
-
----
-
-## ⚙ Environment Configuration
-
-### Backend (.env)
+Create a `.env` file in the root directory:
 
 ```env
-# Server Configuration
+# Backend Server Configuration
 PORT=3000
-CORS_ORIGIN=http://localhost:5173
+NODE_ENV=development
 
-# MySQL Database
+# Frontend Configuration
+VITE_API_URL=http://localhost:3000/api
+
+# Database Configuration
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=your_secure_mysql_password
+DB_PASSWORD=your_mysql_password
 DB_NAME=TESdb
 
-# JWT Authentication
-JWT_SECRET=your_very_secure_jwt_secret_at_least_64_characters_long
-JWT_EXPIRES_IN=30d
+# JWT Configuration (Change this to a random string!)
+JWT_SECRET=your-super-secure-secret-key-minimum-32-characters-long
+JWT_EXPIRE=30d
 
-# Optional: Node Environment
-NODE_ENV=development
+# Vonage SMS Service (Optional)
+VONAGE_API_KEY=your_api_key
+VONAGE_API_SECRET=your_api_secret
+VONAGE_FROM_NUMBER=+1234567890
 
-# SMS Authentication (Vonage)
-VONAGE_API_KEY=your_vonage_api_key
-VONAGE_API_SECRET=your_vonage_api_secret
-VONAGE_FROM_NUMBER=TESProperty
-MOCK_SMS=true
+# CORS Configuration
+CORS_ORIGIN=http://localhost:5173
 ```
 
-### Frontend (client/.env)
+### 4. Set Up Database
 
-```env
-# API Base URL
-VITE_API_URL=http://localhost:3000/api
+```bash
+# Create database schema and tables
+npm run db:schema
+
+# Seed with demo data
+npm run db:seed
 ```
 
-### Environment Variables Reference
+### 5. Start the Application
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `PORT` | No | 3000 | Backend server port |
-| `CORS_ORIGIN` | Yes | - | Frontend URL for CORS |
-| `DB_HOST` | Yes | - | MySQL host address |
-| `DB_PORT` | No | 3306 | MySQL port |
-| `DB_USER` | Yes | - | MySQL username |
-| `DB_PASSWORD` | Yes | - | MySQL password |
-| `DB_NAME` | Yes | - | Database name (TESdb) |
-| `JWT_SECRET` | Yes | - | Secret key for JWT signing |
-| `JWT_EXPIRES_IN` | No | 30d | Token expiration time |
-| `VONAGE_API_KEY` | Required for live SMS | - | Vonage API key for OTP delivery |
-| `VONAGE_API_SECRET` | Required for live SMS | - | Vonage API secret for OTP delivery |
-| `VONAGE_FROM_NUMBER` | No | TESProperty | Sender ID shown on outbound OTP SMS |
-| `MOCK_SMS` | No | true | When true, OTP is logged in server console (no SMS sent) |
-| `VITE_API_URL` | Yes | - | Backend API URL (frontend) |
+```bash
+npm run dev
+```
+
+This starts both:
+- **Backend**: `http://localhost:3000`
+- **Frontend**: `http://localhost:5173`
 
 ---
 
-## SMS Authentication Setup (Phone OTP)
+## 🌐 Access the Portals
 
-Use this section to enable real-time phone verification for customer accounts and inquiry protection.
+| Portal | URL | Login Required | Test Account | Features |
+|--------|-----|-----------------|--------------|----------|
+| **Customer Portal** | `http://localhost:5173/` | ❌ No | N/A - Public | Browse properties, submit inquiries |
+| **Login Page** | `http://localhost:5173/login` | - | See credentials below | Authentication |
+| **Admin Portal** | `http://localhost:5173/admin` | ✅ Yes | admin@tesproperty.com / admin123 | Full system management |
+| **Agent Portal** | `http://localhost:5173/agent` | ✅ Yes | maria@tesproperty.com / agent123 | Inquiry & calendar management |
+| **Super Admin** | `http://localhost:5173/superadmin` | ✅ Yes | Use admin credentials | Database access |
 
-### What this feature does
+### Admin Portal Features:
+- Dashboard with real-time statistics
+- Property management with CRUD operations
+- Multi-image uploads per property
+- Agent management and licensing
+- Inquiry assignment and tracking
+- Activity logs and audit trail
+- Report generation and analytics
 
-- Sends a one-time password (OTP) to a customer phone number
-- Verifies the OTP before allowing inquiry submission
-- Applies rate limiting to OTP requests
-- Stores send and verify audit logs
-
-### 1. Install and migrate
-
-From project root:
-
-1. Run PowerShell setup script:
-   .\SETUP_PHONE_VERIFICATION.ps1
-2. This installs dependencies and applies DB changes for:
-   - customers.phone_verification_token
-   - customers.phone_verification_expires
-   - phone_verification_attempts
-   - phone_verification_log
-
-### 2. Configure environment
-
-In backend .env:
-
-- NODE_ENV=development
-- VONAGE_API_KEY=your_vonage_api_key
-- VONAGE_API_SECRET=your_vonage_api_secret
-- VONAGE_FROM_NUMBER=TESProperty
-- MOCK_SMS=false
-
-Mode behavior:
-
-- Live SMS mode: VONAGE credentials set and MOCK_SMS=false
-  - OTP is sent to the customer phone in real time
-- Mock mode: MOCK_SMS=true or missing VONAGE credentials
-  - OTP is printed in backend terminal only
-
-### 3. Start services
-
-1. Start backend and frontend:
-   npm run dev
-2. Create or login a customer account with phone number
-3. Trigger phone verification from signup, profile, or inquiry flow
-
-### 4. Phone verification API flow
-
-Base URL: /api/customers
-
-1. POST /send-phone-otp
-   - Requires authenticated customer token
-   - Sends OTP (or logs OTP in mock mode)
-   - Returns message, expiresIn, and mode
-
-2. POST /verify-phone
-   - Body: { otp }
-   - Marks phone_verified=true when OTP matches and is not expired
-
-3. POST /resend-phone-otp
-   - Resends OTP with cooldown and rate limits
-
-4. PUT /me
-   - If phone changes, phone verification is reset and must be re-verified
-
-### 5. Troubleshooting live OTP
-
-- OTP not arriving:
-  - Ensure MOCK_SMS=false
-  - Ensure VONAGE_API_KEY and VONAGE_API_SECRET are set correctly
-  - Check backend logs for Vonage error text
-  - Verify target phone format is valid Philippine mobile number
-
-- OTP only appears in terminal:
-  - You are in mock mode (MOCK_SMS=true) or Vonage credentials are missing
-
-- API returns SMS service not configured:
-  - Set VONAGE_API_KEY and VONAGE_API_SECRET in backend .env, then restart server
+### Agent Portal Features:
+- Dashboard with assigned inquiries
+- Calendar for scheduling viewings
+- Property listings for showing
+- Inquiry management and status updates
+- Commission and performance tracking
 
 ---
 
-## 🔑 Default Credentials
+## 🗄️ MySQL Database Structure
 
-> ⚠️ **Security Warning**: Change all default passwords immediately after first deployment!
+Your data is stored in a MySQL database (`TESdb`) with these core tables:
+
+```
+TESdb/
+├── users                       # Admin/Agent accounts
+├── customers                   # Customer accounts
+├── properties                  # Property listings
+├── property_images            # Property photos
+├── inquiries                   # Customer inquiries
+├── calendar_events            # Viewing schedules
+├── customer_appointments      # Appointment tracking
+├── phone_verification_attempts # Rate limiting
+├── phone_verification_log     # Audit trail
+└── activity_log               # System activity
+```
+
+### Database Backup System
+- Automatic backups created before major changes
+- Manual backup: `mysqldump -u root -p TESdb > backup.sql`
+- Restore: `mysql -u root -p TESdb < backup.sql`
+
+---
+
+## 🔑 Test Credentials
 
 ### Admin Account
+- **Email**: `admin@tesproperty.com`
+- **Password**: `admin123`
+- **Access**: All features (properties, inquiries, agents, database, reports)
+- **Role**: Full administrative access
+
+### Agent Account
+- **Email**: `maria@tesproperty.com`
+- **Password**: `agent123`
+- **Access**: Inquiries, calendar, available properties
+- **Role**: Agent with assigned property management
+
+### Customer Account
+- Can register new account at `/login`
+- Or use demo customer if available
+- **Access**: Browse properties, submit inquiries, track appointments
+
+⚠️ **Password Security**: 
+- All passwords are **hashed** using bcrypt (not stored as plain text)
+- Change default passwords before production deployment
+- Minimum 8 characters required for new passwords
+
+---
+
+## 📋 Available Scripts
+
+### Root Level Commands
+
+```bash
+# Start both frontend and backend concurrently
+npm run dev
+
+# Install all dependencies (root + client + server)
+npm install
+
+# Database commands
+npm run db:schema       # Create database schema
+npm run db:seed         # Seed demo data
+npm run db:seed:demo    # Seed showcase data
+
+# Build for production
+npm run build
+npm run preview
 ```
+
+### Backend Commands (from root or server directory)
+
+```bash
+# Start backend only
+npm run server
+
+# Start backend with auto-reload
+npm run server:dev
+
+# Production mode
+npm start
+```
+
+### Frontend Commands (from root or client directory)
+
+```bash
+# Start frontend only
+npm run client
+
+# Build frontend
+cd client && npm run build
+
+# Preview production build
+cd client && npm run preview
+```
+
+---
+
+## 🔌 API Endpoints
+
+### Authentication (Public)
+
+| Method | Endpoint | Description | Rate Limited |
+|--------|----------|-------------|--------------|
+| POST | `/api/auth/register` | Customer signup | ✅ 3/hour |
+| POST | `/api/auth/login` | User login | ✅ 5/15min |
+| POST | `/api/auth/user-login` | Admin/Agent login | ✅ 5/15min |
+| GET | `/api/auth/me` | Get current user | ❌ |
+
+### Properties
+
+| Method | Endpoint | Description | Auth Required | Rate Limited |
+|--------|----------|-------------|---------------|--------------|
+| GET | `/api/properties` | Get all properties (paginated) | ❌ Public | ❌ |
+| GET | `/api/properties/:id` | Get single property | ❌ Public | ❌ |
+| POST | `/api/properties` | Create property | ✅ Admin | ✅ 10/hour |
+| PUT | `/api/properties/:id` | Update property | ✅ Admin/Agent | ❌ |
+| DELETE | `/api/properties/:id` | Delete property | ✅ Admin | ❌ |
+
+### Inquiries
+
+| Method | Endpoint | Description | Auth Required | Rate Limited |
+|--------|----------|-------------|---------------|--------------|
+| POST | `/api/inquiries` | Submit inquiry | ✅ Customer | ✅ 3/hour |
+| GET | `/api/inquiries` | Get all inquiries | ✅ Admin/Agent | ❌ |
+| GET | `/api/inquiries/:id` | Get single inquiry | ✅ Admin/Agent | ❌ |
+| PUT | `/api/inquiries/:id` | Update inquiry | ✅ Admin/Agent | ❌ |
+| POST | `/api/inquiries/:id/claim` | Agent claims inquiry | ✅ Agent | ❌ |
+
+### Calendar & Viewings
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/calendar` | Get all events | ✅ Admin/Agent |
+| POST | `/api/calendar` | Schedule viewing | ✅ Admin/Agent |
+| PUT | `/api/calendar/:id` | Update event | ✅ Admin/Agent |
+| DELETE | `/api/calendar/:id` | Cancel event | ✅ Admin/Agent |
+
+### Users & Agents
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/users` | Get all agents | ✅ Admin |
+| GET | `/api/users/agents` | Get agents list | ✅ Admin |
+| POST | `/api/users` | Create agent | ✅ Admin |
+| DELETE | `/api/users/:id` | Delete agent | ✅ Admin |
+
+---
+
+## 🔐 Security Features
+
+### ✅ Implemented Security
+
+- **Password Hashing** - bcrypt with 10 salt rounds
+- **JWT Authentication** - 30-day session tokens
+- **Input Sanitization** - XSS protection on all user inputs
+- **Rate Limiting** - API protection (1000 requests/min general, 5 attempts/15min login)
+- **Session Management** - Auto-logout on token expiration
+- **File Upload Validation** - Type and size limits
+- **CORS Protection** - Whitelist allowed origins only
+- **Helmet Security Headers** - HTTP security headers
+- **Duplicate Prevention** - Prevent duplicate inquiries per property
+- **Audit Trail** - Track all changes with user, timestamp, action
+- **SQL Injection Prevention** - Parameterized queries (mysql2)
+- **Error Handling** - User-friendly messages with retry options
+
+---
+
+## 🧪 Testing the System
+
+### 1. Test Customer Portal (Public Access)
+```bash
+# Open browser
+http://localhost:5173/
+
+# Expected: See property listings without login
+# Actions: Browse properties, submit inquiry
+```
+
+### 2. Test Admin Login
+```bash
+# Navigate to login
+http://localhost:5173/login
+
+# Credentials:
 Email: admin@tesproperty.com
 Password: admin123
-Role: admin
+
+# Expected: Redirect to admin dashboard
+# Verify: Dashboard shows statistics
 ```
 
-### Agent Accounts
-```
-Agent 1 (Maria):
-Email: maria@tesproperty.com
-Password: agent123
-Role: agent
+### 3. Test Security Features
 
-Agent 2 (Juan):
-Email: juan@tesproperty.com
-Password: agent123
-Role: agent
-```
-
-### Customer Accounts
-```
-No default customer accounts.
-Customers must sign up through the Customer Portal.
-```
-
----
-
-## 🧩 Common Inquiry Status Flow
-
-```
-📝 NEW (Submitted)
-   ↓
-   → Agent Claim
-   ↓
-🏷️ CLAIMED (Agent claimed ticket - automatic)
-   ↓
-   → Agent contacts customer
-   ↓
-📞 CONTACTED
-   ↓
-   → Agent schedules viewing
-   ↓
-📅 VIEWING-SCHEDULED
-   ↓
-   → Viewing happens → Agent marks as done
-   ↓
-   ├─→ 👍 VIEWED-INTERESTED
-   │    ↓
-   │    💼 NEGOTIATING
-   │    ↓
-   │    ├─→ ✅ DEAL-SUCCESSFUL (Terminal - allows resubmission)
-   │    └─→ ❌ DEAL-CANCELLED (Terminal - allows resubmission)
-   │
-   └─→ 👎 VIEWED-NOT-INTERESTED
-        ↓
-        (Can move to NO-RESPONSE if customer stops responding)
-
-🚫 NO-RESPONSE (Terminal - allows resubmission)
-```
-
-**Terminal States** (customer can submit new inquiry for same property):
-- ✅ DEAL-SUCCESSFUL
-- ❌ DEAL-CANCELLED  
-- 🚫 NO-RESPONSE
-
----
-
-## 🐛 Troubleshooting
-
-### Cannot connect to MySQL
-
-**Error:**
-```
-Error: connect ECONNREFUSED 127.0.0.1:3306
-```
-
-**Solutions:**
-1. Ensure MySQL is running:
-   ```bash
-   # Windows
-   net start MySQL80
-   
-   # Linux/Mac
-   sudo systemctl start mysql
-   ```
-2. Verify credentials in `.env`
-3. Check MySQL port (default 3306)
-4. Test connection:
-   ```bash
-   mysql -u root -p -h localhost
-   ```
-
-### Unknown database 'TESdb'
-
-**Error:**
-```
-Error: Unknown database 'TESdb'
-```
-
-**Solution:**
-Run schema creation:
+**Password Hashing:**
 ```bash
-npm run db:schema
+# Check users in database
+mysql -u root -p TESdb
+SELECT * FROM users LIMIT 1;
+
+# Verify passwords start with $2b$ (bcrypt hash)
 ```
 
-### CORS errors
-
-**Error:**
-```
-Access to XMLHttpRequest has been blocked by CORS policy
-```
-
-**Solution:**
-1. Verify `CORS_ORIGIN` in backend `.env` matches frontend URL
-2. Ensure frontend uses correct API URL in `client/.env`
-3. Default setup:
-   - Backend: `CORS_ORIGIN=http://localhost:5173`
-   - Frontend: `VITE_API_URL=http://localhost:3000/api`
-
-### Port already in use
-
-**Error:**
-```
-Error: listen EADDRINUSE: address already in use :::3000
+**Rate Limiting:**
+```bash
+# Try 6 failed login attempts
+# Expected: "Too many attempts" after 5th attempt
 ```
 
+### 4. Test API Endpoints
+```bash
+# Test public endpoint
+curl http://localhost:3000/api/properties
+
+# Test protected endpoint
+curl http://localhost:3000/api/inquiries
+
+# Expected: 401 Unauthorized (no token)
+```
+
+---
+
+## 📁 Project Structure
+
+```
+SIAfinalforDEFENSE/
+├── client/                      # React frontend application
+│   ├── src/
+│   │   ├── components/         # React components
+│   │   │   ├── admin/         # Admin portal components
+│   │   │   ├── agent/         # Agent portal components
+│   │   │   ├── customer/      # Customer portal components
+│   │   │   ├── shared/        # Shared components
+│   │   ├── pages/             # Page components
+│   │   ├── services/          # API services (Axios)
+│   │   ├── types/             # TypeScript definitions
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── utils/             # Utility functions
+│   │   └── App.tsx            # Main app component
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tsconfig.json
+│
+├── server/                      # Express backend application
+│   ├── routes/                # API route handlers
+│   │   ├── auth.js
+│   │   ├── properties.js
+│   │   ├── inquiries.js
+│   │   ├── calendar.js
+│   │   ├── users.js
+│   │   ├── customers.js
+│   │   ├── activity-log.js
+│   │   └── database.js
+│   ├── middleware/            # Express middleware
+│   │   ├── auth.js
+│   │   ├── rateLimiter.js
+│   │   ├── validators.js
+│   │   └── logger.js
+│   ├── sql/                   # Database migration scripts
+│   │   ├── schema.sql         # Main schema
+│   │   ├── property_agent_ownership.sql
+│   │   ├── customer_auth_migration.sql
+│   │   ├── add_phone_verification.sql
+│   │   └── [more migrations]
+│   ├── scripts/               # Database setup scripts
+│   ├── services/              # Business logic
+│   ├── utils/                 # Utilities
+│   ├── uploads/               # Uploaded property images
+│   ├── db.js                  # Database connection
+│   ├── index.js               # Server entry point
+│   └── package.json
+│
+├── scripts/                     # Root utility scripts
+├── .env.example               # Environment template
+├── .gitignore                 # Git ignore rules
+├── package.json               # Root package config
+├── README.md                  # This file
+└── [Additional docs]
+```
+
+---
+
+## 🗓️ Update Log
+
+### 2026-04-13 (v2.0) - Production Release
+- **Complete System Implementation** - All features fully working
+- **MySQL Database** - Migrated from JSON to MySQL for scalability
+- **Customer Portal** - Public property browsing with authentication
+- **Agent Portal** - Full inquiry and calendar management
+- **Admin Dashboard** - Complete property and user management
+- **Security Hardening** - Enterprise-grade security features
+- **Documentation** - Comprehensive guides and API documentation
+- **Production Ready** - System ready for deployment
+
+### Previous Versions
+- v1.0 - Initial system architecture
+- v1.5 - Added phone verification
+- v1.8 - Property workflow system
+- v2.0 - MySQL migration and enterprise features
+
+---
+
+## 🚨 Common Issues & Solutions
+
+### Issue: "Port 3000 already in use"
 **Solution:**
 ```bash
 # Windows
 netstat -ano | findstr :3000
-taskkill /PID <PID> /F
+taskkill /PID [PID_NUMBER] /F
 
-# Linux/Mac
+# Mac/Linux
 lsof -ti:3000 | xargs kill -9
 ```
 
-### JWT token expired
-
-**Error:**
-```
-401 Unauthorized - Token expired
-```
-
+### Issue: "Cannot connect to MySQL database"
 **Solution:**
-1. Log out and log in again
-2. Check `JWT_EXPIRES_IN` in `.env` (default 30d)
-3. Clear browser localStorage if issues persist
+```bash
+# Check MySQL is running
+mysql -u root -p
 
-### Cannot claim inquiry
-
-**Error:**
+# Verify connection in .env:
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
 ```
-Ticket already claimed by another agent
-```
 
-**Reason:**
-Another agent claimed the ticket first (race condition).
-
+### Issue: "JWT token expired"
 **Solution:**
-Inquiries work on a first-come, first-served basis. Try claiming other available tickets.
+- Login again to get new token
+- Tokens expire after 30 days
+- Check JWT_SECRET is set in .env
 
-### Migration errors
-
-**Error:**
-```
-ER_DUP_FIELDNAME: Duplicate column name
-```
-
-**Reason:**
-Column already exists from previous migration.
-
+### Issue: "Rate limit exceeded"
 **Solution:**
-This is normal and safe - the migration script continues. The warning can be ignored.
+- API Rate Limit: 1000 requests/minute
+- Login Rate Limit: 5 attempts per 15 minutes
+- Wait for the time window to reset
+- Adjust limits in `server/middleware/rateLimiter.js`
 
----
-
-## 📊 Database Maintenance
-
-### Backup Database
-
+### Issue: "Cannot find module 'xyz'"
+**Solution:**
 ```bash
-# Full backup
-mysqldump -u root -p TESdb > backup_$(date +%Y%m%d).sql
+# Reinstall dependencies
+rm -rf node_modules package-lock.json
+npm install
 
-# Tables only (no data)
-mysqldump -u root -p --no-data TESdb > schema.sql
-```
-
-### Restore Database
-
-```bash
-mysql -u root -p TESdb < backup_20260311.sql
-```
-
-### Reset to Clean State
-
-```bash
-# Remove all data but keep schema
-node scripts/clearDemoData.js
-
-# Completely recreate database
-mysql -u root -p -e "DROP DATABASE IF EXISTS TESdb;"
-npm run db:schema
-npm run db:seed
-```
-
-### View Database Statistics
-
-```bash
-node -e "const pool = require('./server/db'); \
-(async () => { \
-  const [tables] = await pool.query('SHOW TABLES'); \
-  console.log('Tables:', tables.length); \
-  const [users] = await pool.query('SELECT COUNT(*) as c FROM users'); \
-  console.log('Users:', users[0].c); \
-  const [props] = await pool.query('SELECT COUNT(*) as c FROM properties'); \
-  console.log('Properties:', props[0].c); \
-  const [inqs] = await pool.query('SELECT COUNT(*) as c FROM inquiries'); \
-  console.log('Inquiries:', inqs[0].c); \
-  await pool.end(); \
-})();"
+# Or install specific package
+npm install xyz
 ```
 
 ---
 
-## 🚀 Deployment
+## 📚 Additional Documentation
 
-### Production Build
-
-1. **Build frontend:**
-   ```bash
-   cd client
-   npm run build
-   ```
-   Output: `client/dist/`
-
-2. **Serve static files:**
-   Configure nginx/Apache to serve `client/dist/` and proxy `/api` to backend.
-
-3. **Backend environment:**
-   ```env
-   NODE_ENV=production
-   PORT=3000
-   CORS_ORIGIN=https://yourdomain.com
-   DB_HOST=production-db-host
-   JWT_SECRET=very-long-random-production-secret
-   ```
-
-4. **Start backend:**
-   ```bash
-   npm start
-   ```
-
-### Process Management
-
-Use PM2 for production:
-```bash
-npm install -g pm2
-
-# Start backend
-pm2 start server/index.js --name tes-property-api
-
-# Monitor
-pm2 status
-pm2 logs tes-property-api
-
-# Auto-restart on reboot
-pm2 startup
-pm2 save
-```
-
-### Nginx Configuration Example
-
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com;
-
-    # Frontend static files
-    location / {
-        root /path/to/siaFINALwithbackend-database/client/dist;
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Backend API proxy
-    location /api {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    # Uploaded images
-    location /uploads {
-        alias /path/to/siaFINALwithbackend-database/server/uploads;
-    }
-}
-```
+- **[COMPLETE_SYSTEM_GUIDE.md](./COMPLETE_SYSTEM_GUIDE.md)** - Detailed system architecture
+- **[FEATURES_USER_STORIES.md](./FEATURES_USER_STORIES.md)** - Feature specifications
+- **[GIT_PUSH_GUIDE.md](./GIT_PUSH_GUIDE.md)** - How to push changes
+- **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Production deployment
+- **[PHONE_VERIFICATION_IMPLEMENTATION.md](./PHONE_VERIFICATION_IMPLEMENTATION.md)** - SMS setup
 
 ---
 
-## 📝 License
+## 🔒 Security Best Practices
 
-This project is proprietary software developed for TES Property Management.
+### For Development
+1. ✅ Never commit `.env` file
+2. ✅ Use strong JWT_SECRET (minimum 32 characters)
+3. ✅ Keep database credentials secure
+4. ✅ Test rate limiting regularly
+5. ✅ Regular database backups
+
+### For Production
+1. 🔐 Change all default passwords
+2. 🔐 Generate new JWT_SECRET
+3. 🔐 Set NODE_ENV=production
+4. 🔐 Enable HTTPS/SSL
+5. 🔐 Configure proper CORS origins
+6. 🔐 Set up automated backups
+7. 🔐 Use environment-specific secrets
+8. 🔐 Enable security monitoring
 
 ---
 
-## 🤝 Support
+## 🎯 Features Roadmap
 
-For issues, questions, or feature requests:
-- Check this README first
-- Review [Troubleshooting](#-troubleshooting) section
-- Check database migration status
-- Verify environment configuration
-- Review activity logs for errors
+### ✅ Completed (v2.0)
+- JWT authentication with 30-day sessions
+- Password hashing (bcrypt 10 rounds)
+- Input sanitization with XSS protection
+- Rate limiting (API: 1000 req/min, Login: 5/15min)
+- MySQL database with 10+ tables
+- Multi-role system (Admin/Agent/Customer)
+- Image upload (multi-image per property)
+- Activity logging and audit trails
+- Database portal with export functionality
+- Property workflow validation
+
+### 🔄 In Progress
+- Email notifications for inquiries
+- SMS notifications via Vonage
+- Advanced search filters
+
+### 📋 Planned (v2.1)
+- Two-factor authentication (2FA)
+- Real-time notifications (WebSockets)
+- Advanced analytics dashboard
+- Dark mode theme
+
+### 🚀 Future (v3.0)
+- Mobile app (React Native)
+- GraphQL API implementation
+- AI-powered property recommendations
+- Multi-language support (i18n)
+- Integrated payment gateway
 
 ---
 
-## 📌 Summary
+## 🤝 Contributing
 
-TES Property Management System v2.0 is a complete, production-ready real estate management platform with:
+Contributions welcome! Please:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-✅ **Customer Portal** with authentication  
-✅ **Agent Portal** with smart workflows  
-✅ **Admin Portal** with full control  
-✅ **Database Portal** for super admins  
-✅ **Automated inquiry workflow** (new → claimed → assigned)  
-✅ **Calendar management** with viewing outcomes  
-✅ **One inquiry per property** rule  
-✅ **Complete security** (JWT, RBAC, rate limiting)  
-✅ **Activity logging** for full audit trail  
-✅ **Database migrations** for schema versioning  
+---
 
-**Ready to use** - just install, configure, and run! 🚀
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+## 📞 Support
+
+- **GitHub Issues**: [Report a bug](https://github.com/HansLagmay/SIAfinalforDEFENSE/issues)
+- **GitHub Discussions**: [Ask questions](https://github.com/HansLagmay/SIAfinalforDEFENSE/discussions)
+- **Email**: support@tesproperty.local
+
+---
+
+**Version:** 2.0.0  
+**Last Updated:** April 13, 2026  
+**Status:** Production Ready ✅  
+**Maintained by:** HansLagmay
+
+---
+
+⭐ **Star this repo if you find it helpful!**
+
+🎓 **Perfect for:**
+- Full-stack development learning
+- Portfolio projects
+- Real estate businesses
+- Multi-role authentication systems
+- MySQL database implementation
+- Property management workflows
